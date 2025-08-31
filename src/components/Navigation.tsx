@@ -18,7 +18,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   if (searchQuery.trim()) return null;
 
   return (
-    <nav className="flex flex-wrap justify-center gap-4 mb-12 p-4 bg-white bg-opacity-90 rounded-2xl shadow-xl backdrop-blur-sm">
+    <nav className="flex flex-wrap justify-center gap-4 mb-8 p-4 bg-white bg-opacity-90 rounded-2xl shadow-xl backdrop-blur-sm">
       {sections.map(section => (
         <button
           key={section}

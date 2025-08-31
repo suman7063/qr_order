@@ -5,6 +5,7 @@ import { useMenuData } from '@/hooks/useMenuData';
 import { SearchBar } from '@/components/SearchBar';
 import { Navigation } from '@/components/Navigation';
 import { MenuSection } from '@/components/MenuSection';
+import { Footer } from '@/components/Footer';
 import { SearchItem, MenuData } from '@/types/menu';
 
 export default function RestaurantMenu() {
@@ -125,6 +126,8 @@ export default function RestaurantMenu() {
           currentSection={currentSection}
         />
       </div>
+
+      <Footer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Star, ChefHat } from 'lucide-react';
 import { MenuItem } from '@/types/menu';
 
 interface MenuBadgeProps {
@@ -11,18 +12,16 @@ export const MenuBadge: React.FC<MenuBadgeProps> = ({ item }) => {
   if (!item.bestSeller && !item.chefSpecial) return null;
 
   return (
-    <div className="absolute -top-2 -right-2 flex flex-col gap-1 z-10">
+    <div className="flex items-center gap-2">
       {item.bestSeller && (
-        <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 py-1 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg flex items-center gap-1">
-          <span className="text-xs">🏆</span>
-          Best Seller
-        </span>
+        <div className="hover:scale-110 transition-all duration-300 transform-gpu cursor-help" title="Best Seller">
+          <Star className="w-6 h-6 text-yellow-500" fill="currentColor" />
+        </div>
       )}
       {item.chefSpecial && (
-        <span className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-2 py-1 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg flex items-center gap-1">
-          <span className="text-xs">⭐</span>
-          Chef&apos;s Special
-        </span>
+        <div className="hover:scale-110 transition-all duration-300 transform-gpu cursor-help" title="Chef's Special">
+          <ChefHat className="w-6 h-6 text-purple-600" fill="currentColor" />
+        </div>
       )}
     </div>
   );
