@@ -1,103 +1,130 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import React, { useState, useMemo } from 'react';
+import { useMenuData } from '@/hooks/useMenuData';
+import { SearchBar } from '@/components/SearchBar';
+import { Navigation } from '@/components/Navigation';
+import { MenuSection } from '@/components/MenuSection';
+import { SearchItem, MenuData } from '@/types/menu';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+export default function RestaurantMenu() {
+  const { menuData, loading, error } = useMenuData();
+  const [currentSection, setCurrentSection] = useState<string>('South Indian');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Create search items
+  const allItems: SearchItem[] = useMemo(() => {
+    const items: SearchItem[] = [];
+    Object.keys(menuData).forEach(section => {
+      Object.keys(menuData[section]).forEach(category => {
+        menuData[section][category].forEach(item => {
+          items.push({
+            item: item.itemName,
+            category: category,
+            section: section,
+            fullItem: item
+          });
+        });
+      });
+    });
+    return items;
+  }, [menuData]);
+
+  // Filter items based on search
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    
+    return allItems.filter(item => {
+      const query = searchQuery.toLowerCase();
+      return (
+        item.item.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query) ||
+        item.section.toLowerCase().includes(query) ||
+        item.fullItem.description.toLowerCase().includes(query)
+      );
+    });
+  }, [allItems, searchQuery]);
+
+  // Group search results
+  const groupSearchResults = (items: SearchItem[]): MenuData => {
+    const grouped: MenuData = {};
+    items.forEach(item => {
+      if (!grouped[item.section]) {
+        grouped[item.section] = {};
+      }
+      if (!grouped[item.section][item.category]) {
+        grouped[item.section][item.category] = [];
+      }
+      grouped[item.section][item.category].push(item.fullItem);
+    });
+    return grouped;
+  };
+
+  // Set initial section when data loads
+  React.useEffect(() => {
+    const sections = Object.keys(menuData);
+    if (sections.length > 0) {
+      if (!sections.includes(currentSection)) {
+        setCurrentSection(sections[0]);
+      }
+    }
+  }, [menuData, currentSection]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-purple-700 flex items-center justify-center">
+        <div className="text-white text-xl font-semibold">Loading menu...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-purple-700 flex items-center justify-center">
+        <div className="text-white text-xl text-center max-w-md">
+          <div className="mb-4">❌</div>
+          <div>{error}</div>
+          <div className="mt-4 text-sm opacity-75">
+            Make sure your Google Sheet is public and the ID is correct.
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    );
+  }
+
+  const sections = Object.keys(menuData);
+  const displayData = filteredItems 
+    ? groupSearchResults(filteredItems) 
+    : { [currentSection]: menuData[currentSection] || {} };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-purple-700">
+      {/* Header */}
+      <header className="bg-white bg-opacity-95 backdrop-blur-sm p-8 text-center shadow-xl sticky top-0 z-50">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 drop-shadow-md">
+          🍛 South Indian Kitchen
+        </h1>
+        <p className="text-xl text-gray-600 italic">
+          Authentic Flavors • Fresh Ingredients • Made with Love
+        </p>
+      </header>
+
+      <div className="container mx-auto max-w-6xl p-4">
+        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        
+        <Navigation 
+          sections={sections}
+          currentSection={currentSection}
+          setCurrentSection={setCurrentSection}
+          searchQuery={searchQuery}
+        />
+
+        <MenuSection 
+          displayData={displayData}
+          searchQuery={searchQuery}
+          currentSection={currentSection}
+        />
+      </div>
     </div>
   );
 }
