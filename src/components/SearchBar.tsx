@@ -16,7 +16,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, setSearchQuer
           placeholder="🔍 Search menu items..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full md:w-100 max-w-full px-6 py-2 md:py-4 border-2 border-gray-300 rounded-full text-lg bg-white bg-opacity-90 backdrop-blur-sm transition-all duration-300 focus:outline-none focus:border-orange-500 focus:shadow-xl focus:shadow-orange-200 text-gray-800"
+          className="w-full md:w-96 max-w-full px-6 py-3 md:py-4 border-2 border-[#D4D7C7] rounded-full text-lg bg-white/80 backdrop-blur-sm transition-all duration-300 focus:outline-none focus:border-[#6B7C65] focus:shadow-lg focus:shadow-[#6B7C65]/20 text-[#2C3E50] placeholder-[#8A9BA8]"
         />
       </div>
     </div>

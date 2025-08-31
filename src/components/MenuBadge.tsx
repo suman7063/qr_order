@@ -15,12 +15,12 @@ export const MenuBadge: React.FC<MenuBadgeProps> = ({ item }) => {
     <div className="flex items-center gap-2">
       {item.bestSeller && (
         <div className="hover:scale-110 transition-all duration-300 transform-gpu cursor-help" title="Best Seller">
-          <Star className="w-6 h-6 text-yellow-500" fill="currentColor" />
+          <Star className="w-6 h-6 text-[#6B7C65]" fill="currentColor" />
         </div>
       )}
       {item.chefSpecial && (
         <div className="hover:scale-110 transition-all duration-300 transform-gpu cursor-help" title="Chef's Special">
-          <ChefHat className="w-6 h-6 text-purple-600" fill="currentColor" />
+          <ChefHat className="w-6 h-6 text-[#6B7C65]" fill="currentColor" />
         </div>
       )}
     </div>

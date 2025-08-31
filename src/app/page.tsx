@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { useMenuData } from '@/hooks/useMenuData';
 import { SearchBar } from '@/components/SearchBar';
 import { Navigation } from '@/components/Navigation';
 import { MenuSection } from '@/components/MenuSection';
 import { Footer } from '@/components/Footer';
+import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import { SearchItem, MenuData } from '@/types/menu';
 
 export default function RestaurantMenu() {
@@ -73,16 +75,18 @@ export default function RestaurantMenu() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-purple-700 flex items-center justify-center">
-        <div className="text-white text-xl font-semibold">Loading menu...</div>
+      <div className="min-h-screen bg-gradient-to-br from-[#F5F5DC] via-[#E8E6D9] to-[#9CAF88] flex items-center justify-center">
+        <BackgroundAnimation />
+        <div className="text-[#2C3E50] text-xl font-medium">Loading menu...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-purple-700 flex items-center justify-center">
-        <div className="text-white text-xl text-center max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-[#F5F5DC] via-[#E8E6D9] to-[#9CAF88] flex items-center justify-center">
+        <BackgroundAnimation />
+        <div className="text-[#2C3E50] text-xl text-center max-w-md">
           <div className="mb-4">❌</div>
           <div>{error}</div>
           <div className="mt-4 text-sm opacity-75">
@@ -99,18 +103,28 @@ export default function RestaurantMenu() {
     : { [currentSection]: menuData[currentSection] || {} };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-purple-700">
+    <div className="min-h-screen bg-gradient-to-br from-[#F5F5DC] via-[#E8E6D9] to-[#9CAF88] relative">
+      <BackgroundAnimation />
       {/* Header */}
-      <header className="bg-white bg-opacity-95 backdrop-blur-sm p-8 text-center shadow-xl sticky top-0 z-50">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 drop-shadow-md">
-          🍛 South Indian Kitchen
-        </h1>
-        <p className="text-xl text-gray-600 italic">
+      <header className="bg-white/80 backdrop-blur-md p-4 md:p-6 text-center shadow-lg border-b border-[#D4D7C7] sticky top-0 z-50">
+        <div className="flex items-center justify-center gap-4 mb-2">
+          <Image 
+            src="/logo.jpeg" 
+            alt="Sagars Cafe" 
+            width={80} 
+            height={80} 
+            className="md:w-20 md:h-20 w-10 h-10 rounded-full shadow-md"
+          />
+          <h1 className="text-4xl md:text-5xl font-bold text-[#2C3E50] tracking-tight">
+            Sagars Cafe
+          </h1>
+        </div>
+        <p className="text-lg text-[#5A6C7D] font-light">
           Authentic Flavors • Fresh Ingredients • Made with Love
         </p>
       </header>
 
-      <div className="container mx-auto max-w-6xl p-4">
+      <div className="container mx-auto max-w-6xl md:p-4 p-2 relative z-10">
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         
         <Navigation 
