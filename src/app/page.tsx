@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { useMenuData } from "@/hooks/useMenuData";
 import { SearchBar } from "@/components/SearchBar";
@@ -16,7 +16,21 @@ export default function RestaurantMenu() {
   const { menuData, loading, error } = useMenuData();
   const [currentSection, setCurrentSection] = useState<string>("South Indian");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isTaglineVisible, setIsTaglineVisible] = useState<boolean>(true);
   const { handleClick } = useClickTracking();
+
+  // Scroll effect for tagline visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show only at top, hide after 100px scroll
+      setIsTaglineVisible(currentScrollY <= 80);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Create search items
   const allItems: SearchItem[] = useMemo(() => {
@@ -45,8 +59,7 @@ export default function RestaurantMenu() {
       return (
         item.item.toLowerCase().includes(query) ||
         item.category.toLowerCase().includes(query) ||
-        item.section.toLowerCase().includes(query) ||
-        item.fullItem.description.toLowerCase().includes(query)
+        item.section.toLowerCase().includes(query)
       );
     });
 
@@ -130,8 +143,8 @@ export default function RestaurantMenu() {
     <div className="min-h-screen bg-gradient-to-br from-[#F5F5DC] via-[#E8E6D9] to-[#9CAF88] relative">
       <BackgroundAnimation />
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md p-4 md:p-6 text-center shadow-lg border-b border-[#D4D7C7] sticky top-0 z-20">
-        <div className="flex items-center justify-center gap-4 md:mb-2">
+      <header className="bg-white/80 backdrop-blur-md p-2 md:p-6 text-center shadow-lg border-b border-[#D4D7C7] sticky top-0 z-20">
+        <div className="flex items-center justify-center gap-1 md:gap-2">
           <Image
             src="/logo.jpeg"
             alt="Sagars Cafe"
@@ -139,27 +152,29 @@ export default function RestaurantMenu() {
             height={80}
             className="md:w-20 md:h-20 w-10 h-10 rounded-full shadow-md"
           />
-          <h1 className="text-4xl md:text-5xl font-bold text-[#2C3E50] tracking-tight">
+          <h1 className="text-2xl md:text-5xl font-bold text-[#2C3E50] tracking-tight">
             Sagars Cafe
           </h1>
         </div>
-        <p className="text-lg text-[#5A6C7D] font-light">
+        <p 
+          className={`text-sm md:text-lg text-[#5A6C7D] font-light leading-tight transition-all duration-300 ease-in-out ${
+            isTaglineVisible 
+              ? 'opacity-100 max-h-8 mt-2' 
+              : 'opacity-0 max-h-0 overflow-hidden '
+          }`}
+        >
           Authentic Flavors • Fresh Ingredients • Made with Love
         </p>
       </header>
 
       {/* Fixed floating special banner - responsive */}
-      {!searchQuery.trim() && (
-        <div className="hidden md:block fixed top-26 right-4 z-30">
-          <SpecialTables menuData={menuData} />
-        </div>
-      )}
+      <div className="hidden md:block fixed top-26 right-4 z-30">
+        <SpecialTables menuData={menuData} />
+      </div>
 
-      {!searchQuery.trim() && (
-        <div className="md:hidden mt-4 px-2">
-          <SpecialTables menuData={menuData} />
-        </div>
-      )}
+      <div className="md:hidden mt-4 px-2">
+        <SpecialTables menuData={menuData} />
+      </div>
 
       <div className="container mx-auto max-w-6xl md:p-4 p-2 relative z-10">
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />

@@ -16,7 +16,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
   currentSection 
 }) => {
   return (
-    <div className="bg-white/70 backdrop-blur-md rounded-3xl px-4 py-6 md:p-8 shadow-lg border border-[#D4D7C7] animate-fade-in">
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl p-4 md:p-8 shadow-lg border border-[#D4D7C7] animate-fade-in">
       <h2 className="text-3xl text-[#2C3E50] mb-8 text-center relative pb-4 font-semibold tracking-wide">
         {searchQuery.trim() ? `Search Results for "${searchQuery}"` : currentSection}
         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-[#6B7C65] rounded-full"></div>
@@ -27,7 +27,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
           No items found. Try searching with different keywords.
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 ">
           {Object.keys(displayData).map(section =>
             Object.keys(displayData[section] || {}).map(category => (
               <div

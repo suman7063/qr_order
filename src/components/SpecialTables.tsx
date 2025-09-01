@@ -41,14 +41,14 @@ export const SpecialTables: React.FC<SpecialTablesProps> = ({ menuData }) => {
       {/* Banner */}
       <div className="md:mb-8 mb-2">
         <div 
-          className="bg-gradient-to-r from-[#9CAF88] to-[#6B7C65] rounded-2xl p-6 shadow-lg border-2 border-[#D4D7C7] cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+          className="bg-gradient-to-r from-[#9CAF88] to-[#6B7C65] rounded-2xl py-2 px-4 md:p-6  shadow-lg border-2 border-[#D4D7C7] cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
           onClick={() => setIsDrawerOpen(true)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-4">
-              <div className="text-xl md:text-3xl">🍛</div>
+              <div className="text-2xl md:text-3xl">🍛</div>
               <div>
-                <h3 className="text-2xl font-bold text-white md:mb-1">Today's Specials</h3>
+                <h3 className="md:text-2xl text-xl font-bold text-white md:mb-1">Today's Specials</h3>
                 <p className="text-[#E8E6D9] text-sm">
                   {todaysSpecials.length} special item{todaysSpecials.length !== 1 ? 's' : ''} available today!
                 </p>
@@ -100,7 +100,7 @@ export const SpecialTables: React.FC<SpecialTablesProps> = ({ menuData }) => {
             </div>
 
             {/* Drawer Content */}
-            <div className="p-6 overflow-y-auto h-[calc(100vh-120px)]">
+            <div className=" px-2 py-4 md:p-6 overflow-y-auto h-[calc(100vh-120px)]">
               <div className="space-y-4">
                 {todaysSpecials.map(({ item, section, category }, index) => (
                   <div
@@ -111,7 +111,7 @@ export const SpecialTables: React.FC<SpecialTablesProps> = ({ menuData }) => {
                       <h3 className="text-lg font-semibold text-[#2C3E50]">
                         {item.itemName}
                       </h3>
-                      <span className="text-[#5A6C7D] text-xs bg-[#E8E6D9] px-2 py-1 rounded-full">
+                      <span className="text-[#5A6C7D] text-xs bg-[#E8E6D9] px-2 py-1 rounded-full text-nowrap">
                         {section} • {category}
                       </span>
                     </div>
@@ -126,16 +126,6 @@ export const SpecialTables: React.FC<SpecialTablesProps> = ({ menuData }) => {
                     </div>
                   </div>
                 ))}
-              </div>
-              
-              {/* Close Button at Bottom */}
-              <div className="mt-8 pt-6 border-t border-[#D4D7C7]">
-                <button 
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="w-full bg-[#6B7C65] text-white py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-[#5A6C7D] hover:shadow-lg hover:-translate-y-0.5"
-                >
-                  Close
-                </button>
               </div>
             </div>
           </div>

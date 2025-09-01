@@ -7,7 +7,7 @@ import { useClickTracking } from '@/hooks/useClickTracking';
 export const Footer: React.FC = () => {
   const { handleClick } = useClickTracking();
   return (
-    <footer className="bg-white/70 backdrop-blur-md p-8 mt-12 rounded-t-3xl shadow-lg border-t border-[#D4D7C7]">
+    <footer className="bg-white/70 backdrop-blur-md p-8 mt-8 md:mt-12 rounded-t-2xl shadow-lg border-t border-[#D4D7C7]">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center">
           <h3 className="text-xl font-semibold text-[#2C3E50] mb-6 tracking-wide">Menu Legend</h3>

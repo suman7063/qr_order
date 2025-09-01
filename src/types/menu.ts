@@ -11,7 +11,6 @@ export interface MenuItem {
   isActive: boolean;
   bestSeller: boolean;
   chefSpecial: boolean;
-  todaysSpecial: boolean;
 }
 
 export interface MenuData {
