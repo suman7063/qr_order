@@ -24,7 +24,7 @@ export const SpecialTables: React.FC<SpecialTablesProps> = ({ menuData }) => {
   Object.keys(menuData).forEach(section => {
     Object.keys(menuData[section]).forEach(category => {
       menuData[section][category].forEach(item => {
-        if (item.todaysSpecial) {
+        if (item?.todaysSpecial) {
           todaysSpecials.push({ item, section, category });
         }
       });
