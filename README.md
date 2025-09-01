@@ -49,11 +49,29 @@ Create a `.env.local` file in the root directory:
 
 ```env
 NEXT_PUBLIC_GOOGLE_SHEET_ID=your_google_sheet_id_here
+NEXT_PUBLIC_AMPLITUDE_API_KEY=your_amplitude_api_key_here
 ```
 
-Replace `your_google_sheet_id_here` with your actual Google Sheet ID.
+Replace the placeholder values with your actual:
+- Google Sheet ID
+- Amplitude API Key (get from [Amplitude Dashboard](https://analytics.amplitude.com/))
 
-### 4. Run the Development Server
+### 4. Amplitude Analytics Setup
+
+This application includes Amplitude analytics to track user interactions:
+
+- **Navigation clicks**: Track which menu sections users visit
+- **Search interactions**: Monitor search queries and focus events
+- **Menu item views**: Track which items users view
+- **Legend interactions**: Monitor footer legend clicks
+
+To set up Amplitude:
+1. Create an account at [Amplitude](https://amplitude.com/)
+2. Create a new project
+3. Copy your API key from the project settings
+4. Add it to your `.env.local` file
+
+### 5. Run the Development Server
 
 ```bash
 npm run dev
@@ -74,14 +92,19 @@ restaurant-menu/
 │   │   ├── layout.tsx                # Root layout
 │   │   └── page.tsx                  # Main page component
 │   ├── components/
+│   │   ├── AmplitudeProvider.tsx     # Amplitude initialization wrapper
+│   │   ├── BackgroundAnimation.tsx   # Animated background elements
+│   │   ├── Footer.tsx                # Footer with menu legend
 │   │   ├── MenuBadge.tsx             # Badge component for special items
 │   │   ├── MenuItem.tsx              # Individual menu item component
 │   │   ├── SearchBar.tsx             # Search functionality
 │   │   ├── Navigation.tsx            # Section navigation
 │   │   └── MenuSection.tsx           # Menu section display
 │   ├── hooks/
+│   │   ├── useClickTracking.ts       # Custom hook for click tracking
 │   │   └── useMenuData.ts            # Custom hook for menu data
 │   ├── lib/
+│   │   ├── amplitude.ts              # Amplitude configuration
 │   │   └── menuData.ts               # Google Sheets integration
 │   └── types/
 │       └── menu.ts                   # TypeScript type definitions

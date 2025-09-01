@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AmplitudeProvider } from '@/components/AmplitudeProvider'
 
 export const metadata: Metadata = {
   title: 'Sagars Cafe - Online Menu',
@@ -14,7 +15,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AmplitudeProvider>
+          {children}
+        </AmplitudeProvider>
+      </body>
     </html>
   )
 }

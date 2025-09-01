@@ -9,11 +9,13 @@ import { MenuSection } from '@/components/MenuSection';
 import { Footer } from '@/components/Footer';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import { SearchItem, MenuData } from '@/types/menu';
+import { useClickTracking } from '@/hooks/useClickTracking';
 
 export default function RestaurantMenu() {
   const { menuData, loading, error } = useMenuData();
   const [currentSection, setCurrentSection] = useState<string>('South Indian');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const { handleClick } = useClickTracking();
 
   // Create search items
   const allItems: SearchItem[] = useMemo(() => {
@@ -37,7 +39,7 @@ export default function RestaurantMenu() {
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return null;
     
-    return allItems.filter(item => {
+    const results = allItems.filter(item => {
       const query = searchQuery.toLowerCase();
       return (
         item.item.toLowerCase().includes(query) ||
@@ -46,7 +48,26 @@ export default function RestaurantMenu() {
         item.fullItem.description.toLowerCase().includes(query)
       );
     });
-  }, [allItems, searchQuery]);
+
+    // Track search results
+    if (searchQuery.trim() && results.length > 0) {
+      handleClick('search_results', {
+        query: searchQuery,
+        resultCount: results.length,
+        hasResults: true,
+        resultCategories: [...new Set(results.map(item => item.category))],
+        resultSections: [...new Set(results.map(item => item.section))]
+      });
+    } else if (searchQuery.trim() && results.length === 0) {
+      handleClick('search_no_results', {
+        query: searchQuery,
+        resultCount: 0,
+        hasResults: false
+      });
+    }
+
+    return results;
+  }, [allItems, searchQuery, handleClick]);
 
   // Group search results
   const groupSearchResults = (items: SearchItem[]): MenuData => {
