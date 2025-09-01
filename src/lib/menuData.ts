@@ -40,6 +40,7 @@ export const parseCSV = (csvText: string): MenuItem[] => {
         isActive: values[9] === 'TRUE',
         bestSeller: values[10] === 'TRUE',
         chefSpecial: values[11] === 'TRUE',
+        todaysSpecial: values[12] === 'TRUE',
       };
     })
     .filter(item => item.status === 'Active' && item.isActive);

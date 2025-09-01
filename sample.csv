@@ -1,0 +1,39 @@
+Section,Category,Item_Name,Description,Price_Regular,Price_Small,Price_Medium,Price_Large,Status,IsActive,BestSeller,ChefSpecial,TodaysSpecial
+South Indian,Idly Varieties,Idly,"Soft, fluffy steamed rice cakes served with sambar and coconut chutney",30,,,,Active,TRUE,TRUE,FALSE,FALSE
+South Indian,Idly Varieties,Tatte Idly,"Traditional plate idly, extra soft and spongy, served with sambar",35,,,,Active,TRUE,FALSE,FALSE,FALSE
+South Indian,Idly Varieties,Ghee Podi Idly,"Steamed idly tossed in ghee and spicy powder, bursting with South Indian flavors",45,,,,Active,TRUE,FALSE,TRUE,FALSE
+South Indian,Idly Varieties,Vada,"Golden crispy lentil donuts, perfectly spiced and served with sambar & chutney",35,,,,Active,TRUE,TRUE,FALSE,FALSE
+South Indian,Plain Dosa,Plain Dosa,"Crispy rice crepe, golden brown and served with sambar and assorted chutneys",40,,,,Active,TRUE,FALSE,FALSE,FALSE
+South Indian,Plain Dosa,Butter Plain Dosa,Classic plain dosa brushed with butter for extra richness and flavor,50,,,,Active,TRUE,FALSE,FALSE,FALSE
+South Indian,Plain Dosa,Ghee Plain Dosa,"Traditional dosa roasted in pure ghee, aromatic and deliciously crispy",55,,,,Active,TRUE,FALSE,TRUE,FALSE
+South Indian,Masala Dosa,Masala Dosa,"Crispy dosa filled with spiced potato masala, onions, and traditional seasonings",50,,,,Active,TRUE,TRUE,FALSE,FALSE
+South Indian,Masala Dosa,Butter Masala Dosa,Classic masala dosa enhanced with butter for extra taste and aroma,60,,,,Active,TRUE,TRUE,FALSE,FALSE
+South Indian,Uttapam,Plain Uttapam,"Soft, thick rice pancake with a spongy texture, served with chutneys",50,,,,Active,TRUE,FALSE,FALSE,FALSE
+South Indian,Uttapam,Onion Uttapam,Thick pancake-style dosa topped with fresh onions and served with sambar,55,,,,Active,TRUE,FALSE,FALSE,FALSE
+North Indian,Paratha,Plain Paratha,"Flaky, layered flatbread cooked on tawa with ghee, soft and delicious",40,,,,Active,TRUE,FALSE,FALSE,FALSE
+North Indian,Paratha,Aloo Paratha,"Famous potato-stuffed paratha with cumin, coriander and green chillies",55,,,,Active,TRUE,TRUE,FALSE,FALSE
+North Indian,Paratha,Gobi Paratha,"Popular cauliflower stuffed paratha with ginger, coriander and spices",60,,,,Active,TRUE,FALSE,FALSE,FALSE
+Chinese,Momos,Steamed Veg Momo,Soft steamed dumplings filled with fresh vegetables and served with spicy chutney,60,,,,Active,TRUE,TRUE,FALSE,FALSE
+Chinese,Momos,Steamed Paneer Momo,Delicate dumplings stuffed with spiced paneer and herbs,70,,,,Active,TRUE,FALSE,TRUE,FALSE
+Chinese,Soups,Clear Soup,Light and healthy vegetable broth with fresh herbs and seasonings,50,,,,Active,TRUE,FALSE,FALSE,FALSE
+Chinese,Soups,Manchow Soup,"Thick Indo-Chinese soup with vegetables, noodles and garlic",65,,,,Active,TRUE,TRUE,FALSE,FALSE
+Chinese,Fried Rice,Veg Fried Rice,"Wok-tossed rice with fresh vegetables, soy sauce and aromatic spices",80,,,,Active,TRUE,FALSE,FALSE,FALSE
+Chinese,Noodles,Veg Hakka Noodles,Classic stir-fried noodles with fresh vegetables and soy-based sauce,80,,,,Active,TRUE,TRUE,FALSE,FALSE
+Beverages,Hot Beverages,Tea,"Fresh brewed tea with perfect blend of milk, sugar and aromatic spices",,15,22,,Active,TRUE,TRUE,FALSE,FALSE
+Beverages,Hot Beverages,Coffee,Fresh brewed coffee with perfect balance of strength and smoothness,20,,,,Active,TRUE,FALSE,FALSE,FALSE
+Beverages,Hot Beverages,Filter Coffee,Authentic South Indian filter coffee with chicory and rich flavor,25,,,,Active,TRUE,FALSE,TRUE,FALSE
+Beverages,Fresh Juices,Fresh Lime,"Refreshing lime juice with mint, perfect for hot weather",30,,,45,Active,TRUE,TRUE,FALSE,FALSE
+Beverages,Fresh Juices,Orange,Fresh orange juice packed with Vitamin C and natural sweetness,40,,,55,Active,TRUE,FALSE,FALSE,FALSE
+Beverages,Fresh Juices,Pineapple,Tropical pineapple juice with sweet-tangy flavor and vitamins,40,,,55,Active,TRUE,FALSE,FALSE,FALSE
+Beverages,Mojitos,Virgin Mojito,Refreshing mint and lime drink with soda and ice,60,,,,Active,TRUE,FALSE,FALSE,FALSE
+Beverages,Mojitos,Watermelon Mojito,Summer special mojito with fresh watermelon and mint,70,,,,Active,TRUE,FALSE,TRUE,FALSE
+Beverages,Milkshakes,Banana Milkshake,"Rich banana shake with milk, honey and natural sweetness",45,,,65,Active,TRUE,FALSE,FALSE,FALSE
+Beverages,Milkshakes,Mango Milkshake,King of fruits milkshake with alphonso mangoes and cream,60,,,80,Active,TRUE,TRUE,FALSE,FALSE
+Snacks,Maggi,Masala Maggi,Classic instant noodles with traditional masala flavoring,40,,,,Active,TRUE,TRUE,FALSE,FALSE
+Snacks,Maggi,Cheese Maggi,Creamy maggi with melted cheese for extra indulgence,60,,,,Active,TRUE,FALSE,FALSE,FALSE
+Snacks,French Fries,Salted French Fries,Golden crispy potato fries with perfect salt seasoning,50,,,,Active,TRUE,FALSE,FALSE,FALSE
+Snacks,French Fries,Peri Peri French Fries,Spicy fries with peri peri seasoning for extra kick,60,,,,Active,TRUE,FALSE,FALSE,FALSE
+Snacks,Burgers & Sandwiches,Veg Burger,"Fresh vegetable patty with lettuce, tomato and special sauce",70,,,,Active,TRUE,FALSE,FALSE,FALSE
+Mexican,Burgers & Sandwiches,Paneer Burger,Grilled paneer patty with vegetables and tangy sauces,85,,,,Active,TRUE,FALSE,TRUE,FALSE
+Beverages,Boba,Strawberry,"Rich banana shake with milk, honey and natural sweetness",45,,,65,Active,FALSE,FALSE,FALSE,FALSE
+European,Boba,Choclate,"Rich banana shake with milk, honey and natural sweetness",45,,,65,Active,TRUE,FALSE,FALSE,FALSE
