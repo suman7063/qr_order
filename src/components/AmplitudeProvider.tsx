@@ -2,12 +2,23 @@
 
 import { useEffect } from 'react';
 import { initAmplitude, trackSessionStart, trackPageView, trackEngagement } from '@/lib/amplitude';
+import { ClientOnly } from './ClientOnly';
 
 interface AmplitudeProviderProps {
   children: React.ReactNode;
 }
 
 export const AmplitudeProvider: React.FC<AmplitudeProviderProps> = ({ children }) => {
+  return (
+    <ClientOnly>
+      <AmplitudeProviderInner>
+        {children}
+      </AmplitudeProviderInner>
+    </ClientOnly>
+  );
+};
+
+const AmplitudeProviderInner: React.FC<AmplitudeProviderProps> = ({ children }) => {
   useEffect(() => {
     // Initialize Amplitude on the client side
     initAmplitude();
