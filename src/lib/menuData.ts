@@ -9,23 +9,11 @@ export const parseCSV = (csvText: string): MenuItem[] => {
   return dataLines
     .filter(line => line.trim())
     .map(line => {
-      // Handle CSV with quotes and commas
-      const values = [];
-      let current = '';
-      let inQuotes = false;
-      
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          values.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      values.push(current.trim());
+      // Optimized CSV parsing using regex for better performance
+      const values = line.match(/("([^"]*)"|([^,]*))(,|$)/g)?.map(match => {
+        const value = match.replace(/,$/, '').replace(/^"(.*)"$/, '$1').trim();
+        return value;
+      }) || [];
 
       return {
         section: values[0] || '',
@@ -55,7 +43,10 @@ export const fetchMenuData = async (): Promise<MenuData> => {
   const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
   
   const response = await fetch(csvUrl, { 
-    cache: 'no-store' // Always fetch fresh data
+    next: { revalidate: 300 }, // Cache for 5 minutes
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; Restaurant-Menu-App/1.0)',
+    },
   });
   
   if (!response.ok) {

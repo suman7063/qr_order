@@ -9,6 +9,8 @@ import { MenuSection } from "@/components/MenuSection";
 import { SpecialTables } from "@/components/SpecialTables";
 import { Footer } from "@/components/Footer";
 import { BackgroundAnimation } from "@/components/BackgroundAnimation";
+import { GoToTopButton } from "@/components/GoToTopButton";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SearchItem, MenuData } from "@/types/menu";
 import { useClickTracking } from "@/hooks/useClickTracking";
 
@@ -23,17 +25,19 @@ export const RestaurantMenuClient: React.FC = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       // Show only at top, hide after 100px scroll
       setIsTaglineVisible(currentScrollY <= 80);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Create search items
+  // Create search items with optimized processing
   const allItems: SearchItem[] = useMemo(() => {
+    if (!menuData || Object.keys(menuData).length === 0) return [];
+    
     const items: SearchItem[] = [];
     Object.keys(menuData).forEach((section) => {
       Object.keys(menuData[section]).forEach((category) => {
@@ -50,12 +54,12 @@ export const RestaurantMenuClient: React.FC = () => {
     return items;
   }, [menuData]);
 
-  // Filter items based on search
+  // Filter items based on search with optimized filtering
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return null;
+    if (!searchQuery.trim() || allItems.length === 0) return null;
 
+    const query = searchQuery.toLowerCase();
     const results = allItems.filter((item) => {
-      const query = searchQuery.toLowerCase();
       return (
         item.item.toLowerCase().includes(query) ||
         item.category.toLowerCase().includes(query) ||
@@ -63,7 +67,7 @@ export const RestaurantMenuClient: React.FC = () => {
       );
     });
 
-    // Track search results
+    // Track search results (debounced to prevent excessive tracking)
     if (searchQuery.trim() && results.length > 0) {
       handleClick("search_results", {
         query: searchQuery,
@@ -109,14 +113,7 @@ export const RestaurantMenuClient: React.FC = () => {
   }, [menuData, currentSection]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F5F5DC] via-[#E8E6D9] to-[#9CAF88] flex items-center justify-center">
-        <BackgroundAnimation />
-        <div className="text-[#2C3E50] text-xl font-medium">
-          Loading menu...
-        </div>
-      </div>
-    );
+    return <SkeletonLoader />;
   }
 
   if (error) {
@@ -156,11 +153,11 @@ export const RestaurantMenuClient: React.FC = () => {
             Sagars Cafe
           </h1>
         </div>
-        <p 
+        <p
           className={`text-sm md:text-lg text-[#5A6C7D] font-light leading-tight transition-all duration-300 ease-in-out ${
-            isTaglineVisible 
-              ? 'opacity-100 max-h-8 mt-2' 
-              : 'opacity-0 max-h-0 overflow-hidden '
+            isTaglineVisible
+              ? "opacity-100 max-h-8 mt-2"
+              : "opacity-0 max-h-0 overflow-hidden "
           }`}
         >
           Authentic Flavors • Fresh Ingredients • Made with Love
@@ -172,13 +169,12 @@ export const RestaurantMenuClient: React.FC = () => {
         <SpecialTables menuData={menuData} />
       </div>
 
-      <div className="md:hidden mt-4 px-2">
-        <SpecialTables menuData={menuData} />
-      </div>
-
       <div className="container mx-auto max-w-6xl md:p-4 p-2 relative z-10">
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
+        <div className="md:hidden">
+          <SpecialTables menuData={menuData} />
+        </div>
         <Navigation
           sections={sections}
           currentSection={currentSection}
@@ -194,6 +190,9 @@ export const RestaurantMenuClient: React.FC = () => {
       </div>
 
       <Footer />
+      
+      {/* Go to Top Button */}
+      <GoToTopButton />
     </div>
   );
 };

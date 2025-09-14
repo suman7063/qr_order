@@ -50,7 +50,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, setSearchQuer
   };
 
   return (
-    <div className="text-center mb-4">
+    <div className="text-center md:mb-4 mb-2">
       <div className="relative md:inline-block">
         <input
           type="text"
