@@ -1,5 +1,39 @@
 import { MenuData, MenuItem } from '@/types/menu';
 
+// Proper CSV parser that handles quoted fields with commas
+const parseCSVLine = (line: string): string[] => {
+  const values: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote
+        current += '"';
+        i++; // Skip next quote
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // End of field
+      values.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // Add the last field
+  values.push(current.trim());
+  
+  return values;
+};
+
 export const parseCSV = (csvText: string): MenuItem[] => {
   const lines = csvText.split('\n');
   if (lines.length < 2) return [];
@@ -9,26 +43,22 @@ export const parseCSV = (csvText: string): MenuItem[] => {
   return dataLines
     .filter(line => line.trim())
     .map(line => {
-      // Optimized CSV parsing using regex for better performance
-      const values = line.match(/("([^"]*)"|([^,]*))(,|$)/g)?.map(match => {
-        const value = match.replace(/,$/, '').replace(/^"(.*)"$/, '$1').trim();
-        return value;
-      }) || [];
+      const values = parseCSVLine(line);
 
       return {
         section: values[0] || '',
         category: values[1] || '',
         itemName: values[2] || '',
         description: values[3] || '',
-        priceRegular: values[4] && !isNaN(Number(values[4])) ? Number(values[4]) : undefined,
-        priceSmall: values[5] && !isNaN(Number(values[5])) ? Number(values[5]) : undefined,
-        priceMedium: values[6] && !isNaN(Number(values[6])) ? Number(values[6]) : undefined,
-        priceLarge: values[7] && !isNaN(Number(values[7])) ? Number(values[7]) : undefined,
-        status: values[8] || 'Active',
-        isActive: values[9] === 'TRUE',
-        bestSeller: values[10] === 'TRUE',
-        chefSpecial: values[11] === 'TRUE',
-        todaysSpecial: values[12] === 'TRUE',
+        priceRegular: values[4] && values[4].trim() && !isNaN(Number(values[4])) ? Number(values[4]) : undefined,
+        priceSmall: values[5] && values[5].trim() && !isNaN(Number(values[5])) ? Number(values[5]) : undefined,
+        priceMedium: values[6] && values[6].trim() && !isNaN(Number(values[6])) ? Number(values[6]) : undefined,
+        priceLarge: values[7] && values[7].trim() && !isNaN(Number(values[7])) ? Number(values[7]) : undefined,
+        status: values[8]?.trim() || 'Active',
+        isActive: values[9]?.trim().toUpperCase() === 'TRUE',
+        bestSeller: values[10]?.trim().toUpperCase() === 'TRUE',
+        chefSpecial: values[11]?.trim().toUpperCase() === 'TRUE',
+        todaysSpecial: values[12]?.trim().toUpperCase() === 'TRUE',
       };
     })
     .filter(item => item.status === 'Active' && item.isActive);
