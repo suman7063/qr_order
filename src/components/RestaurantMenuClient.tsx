@@ -20,6 +20,8 @@ export const RestaurantMenuClient: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isTaglineVisible, setIsTaglineVisible] = useState<boolean>(true);
   const { handleClick } = useClickTracking();
+  const projectName = process.env.NEXT_PUBLIC_PROJECT_NAME || 'Restaurant';
+  const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || '/SagarCafeLogo.jpeg';
 
   // Scroll effect for tagline visibility
   useEffect(() => {
@@ -143,14 +145,14 @@ export const RestaurantMenuClient: React.FC = () => {
       <header className="bg-white/80 backdrop-blur-md p-2 md:p-6 text-center shadow-lg border-b border-[#D4D7C7] sticky top-0 z-20">
         <div className="flex items-center justify-center gap-1 md:gap-2">
           <Image
-            src="/logo.jpeg"
-            alt="Sagars Cafe"
+            src={logoPath}
+            alt={projectName}
             width={80}
             height={80}
             className="md:w-20 md:h-20 w-10 h-10 rounded-full shadow-md"
           />
           <h1 className="text-2xl md:text-5xl font-bold text-[#2C3E50] tracking-tight">
-            Sagars Cafe
+            {projectName}
           </h1>
         </div>
         <p

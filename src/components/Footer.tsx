@@ -6,6 +6,7 @@ import { useClickTracking } from '@/hooks/useClickTracking';
 
 export const Footer: React.FC = () => {
   const { handleClick } = useClickTracking();
+  const projectName = process.env.NEXT_PUBLIC_PROJECT_NAME || 'Restaurant';
   return (
     <footer className="bg-white/70 backdrop-blur-md p-8 mt-8 md:mt-12 rounded-t-2xl shadow-lg border-t border-[#D4D7C7]">
       <div className="container mx-auto max-w-7xl">
@@ -33,7 +34,7 @@ export const Footer: React.FC = () => {
           </div>
           <div className="mt-8 pt-6 border-t border-[#D4D7C7]">
             <p className="text-[#8A9BA8] text-sm font-light">
-              🍛 Sagars Cafe • Authentic Flavors • Fresh Ingredients • Made with Love
+              🍛 {projectName} • Authentic Flavors • Fresh Ingredients • Made with Love
             </p>
           </div>
         </div>
