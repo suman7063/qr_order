@@ -73,7 +73,10 @@ export const fetchMenuData = async (): Promise<MenuData> => {
   const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
   
   const response = await fetch(csvUrl, { 
-    next: { revalidate: 300 }, // Cache for 5 minutes
+    next: { 
+      revalidate: 1800, // Cache for 30 minutes
+      tags: ['menu-data'] // Tag for cache invalidation
+    },
     headers: {
       'User-Agent': 'Mozilla/5.0 (compatible; Restaurant-Menu-App/1.0)',
     },

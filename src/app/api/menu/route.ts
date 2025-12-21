@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { fetchMenuData } from '@/lib/menuData';
 
-// Cache for 5 minutes (300 seconds)
-export const revalidate = 300;
+// Cache for 30 minutes (1800 seconds)
+export const revalidate = 1800;
 
 export async function GET() {
   try {
@@ -10,9 +10,9 @@ export async function GET() {
     
     return NextResponse.json(menuData, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-        'CDN-Cache-Control': 'public, s-maxage=300',
-        'Vercel-CDN-Cache-Control': 'public, s-maxage=300',
+        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600',
+        'CDN-Cache-Control': 'public, s-maxage=1800',
+        'Vercel-CDN-Cache-Control': 'public, s-maxage=1800',
       },
     });
   } catch (error) {
