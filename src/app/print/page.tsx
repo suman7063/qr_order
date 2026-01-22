@@ -7,7 +7,7 @@ import Image from "next/image";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-type TemplateType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
+type TemplateType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
 
 // Color schemes for different templates
 const getTemplateColors = (template: TemplateType) => {
@@ -192,6 +192,19 @@ const getTemplateColors = (template: TemplateType) => {
       itemPrice: "#D4AF37",
       itemDescription: "#E0E0E0",
       borderColor: "#D4AF37",
+    },
+    14: {
+      coverBg: "#9CAF88",
+      coverTitle: "#FFFFFF",
+      coverSubtitle: "#F5F5DC",
+      coverCTA: "#6B8E23",
+      sectionTitle: "#6B7C65",
+      sectionBorder: "#9CAF88",
+      categoryTitle: "#6B8E23",
+      itemName: "#2C3E50",
+      itemPrice: "#6B8E23",
+      itemDescription: "#5A6C7D",
+      borderColor: "#9CAF88",
     },
   };
   return colorSchemes[template];
@@ -941,10 +954,10 @@ export default function PrintMenuPage() {
               
               <div className="mb-6">
                 <label className="block text-sm font-medium mb-3 text-gray-200">
-                  Select Template Style ({selectedTemplate}/13):
+                  Select Template Style ({selectedTemplate}/14):
                 </label>
                 <div className="grid grid-cols-4 md:grid-cols-5 gap-2">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((num) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((num) => (
                     <button
                       key={num}
                       onClick={() => setSelectedTemplate(num as TemplateType)}
@@ -3251,6 +3264,166 @@ export default function PrintMenuPage() {
             );
           }
           .template-13 .foldable-container {
+            grid-template-columns: 1fr 0.5px 1fr;
+          }
+        }
+
+        /* Template 14: Modern Sagar Cafe Theme - Main Page Inspired */
+        .template-14 {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+          background: linear-gradient(to bottom, #F5F5DC 0%, #FAFAF0 100%);
+        }
+        .template-14 .menu-header {
+          text-align: center;
+          padding: 40px 30px;
+          margin-bottom: 30px;
+          background: linear-gradient(135deg, #9CAF88 0%, #6B7C65 100%);
+          color: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          position: relative;
+          overflow: hidden;
+        }
+        .template-14 .menu-header::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          right: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+        .template-14 .section-title {
+          font-size: 26px;
+          color: #6B7C65;
+          margin-top: 30px;
+          margin-bottom: 20px;
+          text-align: center;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 3px;
+          position: relative;
+          padding-bottom: 10px;
+        }
+        .template-14 .section-title::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 100px;
+          height: 3px;
+          background: linear-gradient(to right, transparent, #9CAF88, transparent);
+        }
+        .template-14 .category-title {
+          font-size: 18px;
+          color: #6B8E23;
+          margin-top: 20px;
+          margin-bottom: 12px;
+          font-weight: 600;
+          text-align: center;
+          font-style: italic;
+        }
+        .template-14 .menu-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+          padding: 10px 15px;
+          background: white;
+          border-left: 4px solid #9CAF88;
+          border-radius: 8px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+          transition: all 0.2s ease;
+        }
+        .template-14 .menu-item:hover {
+          box-shadow: 0 4px 10px rgba(156, 175, 136, 0.2);
+          transform: translateX(2px);
+        }
+        .template-14 .item-name {
+          font-weight: 600;
+          font-size: 15px;
+          color: #2C3E50;
+        }
+        .template-14 .item-price {
+          font-weight: bold;
+          color: #6B8E23;
+          font-size: 16px;
+          background: linear-gradient(135deg, #9CAF88 0%, #6B8E23 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .template-14 .item-description {
+          font-size: 12px;
+          color: #5A6C7D;
+          margin-top: 4px;
+          line-height: 1.4;
+        }
+        .template-14 .cover-panel {
+          background: linear-gradient(135deg, #9CAF88 0%, #6B7C65 100%);
+          color: white;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+          padding: 50px 30px;
+          position: relative;
+          overflow: hidden;
+          border-radius: 12px;
+        }
+        .template-14 .cover-panel::before {
+          content: '';
+          position: absolute;
+          top: -100px;
+          left: -100px;
+          width: 300px;
+          height: 300px;
+          border: 4px solid rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+        }
+        .template-14 .cover-panel::after {
+          content: '';
+          position: absolute;
+          bottom: -100px;
+          right: -100px;
+          width: 300px;
+          height: 300px;
+          border: 4px solid rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+        }
+        .template-14 .cover-title {
+          font-size: 36px;
+          font-weight: bold;
+          margin-bottom: 20px;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+          z-index: 1;
+        }
+        .template-14 .cover-subtitle {
+          font-size: 20px;
+          font-style: italic;
+          color: #F5F5DC;
+          margin-bottom: 30px;
+          z-index: 1;
+        }
+        .template-14 .contact-info {
+          margin-top: 30px;
+          font-size: 14px;
+          opacity: 0.95;
+          z-index: 1;
+        }
+        @media print {
+          .template-14 .fold-line {
+            background: repeating-linear-gradient(
+              to bottom,
+              #9CAF88 0px,
+              #9CAF88 1px,
+              transparent 1px,
+              transparent 8px
+            );
+          }
+          .template-14 .foldable-container {
             grid-template-columns: 1fr 0.5px 1fr;
           }
         }
