@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useMenuData } from "@/hooks/useMenuData";
 import { MenuData, MenuItem } from "@/types/menu";
 import Image from "next/image";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 type TemplateType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
 
@@ -199,22 +201,716 @@ const getTemplateColors = (template: TemplateType) => {
 export default function PrintMenuPage() {
   const { menuData, loading, error } = useMenuData();
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(1);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
 
   const projectName = process.env.NEXT_PUBLIC_PROJECT_NAME || 'Restaurant';
   const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || '/SagarCafeLogo.jpeg';
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     try {
       if (!menuData || Object.keys(menuData).length === 0) {
         alert('Menu data is not available. Please wait for the menu to load.');
         return;
       }
 
-      // Use native browser print with CSS
-      window.print();
+      if (!menuContainerRef.current) {
+        alert('Menu container not found. Please try again.');
+        return;
+      }
+
+      setIsGeneratingPDF(true);
+
+      // Wait a bit for any animations/rendering to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Add temporary stylesheet to ensure content is visible during capture
+      const styleSheet = document.createElement('style');
+      styleSheet.id = 'temp-capture-styles';
+      styleSheet.textContent = `
+        .no-print { display: none !important; }
+        * { 
+          visibility: visible !important; 
+          opacity: 1 !important;
+        }
+        .menu-page, .cover-page {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .menu-page *, .cover-page * {
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+      `;
+      document.head.appendChild(styleSheet);
+
+      // Get container width to ensure all pages have same width
+      const containerWidth = menuContainerRef.current.offsetWidth || menuContainerRef.current.clientWidth;
+      
+      // Capture each page separately
+      const menuPages = menuContainerRef.current.querySelectorAll('.menu-page, .cover-page');
+      
+      // Find the maximum width to ensure all pages use the same width
+      let maxPageWidth = containerWidth || 1200;
+      menuPages.forEach((page) => {
+        const pageEl = page as HTMLElement;
+        const pageWidth = pageEl.offsetWidth || pageEl.scrollWidth || containerWidth;
+        maxPageWidth = Math.max(maxPageWidth, pageWidth);
+      });
+      
+      // Use the maximum width for ALL pages to ensure consistency
+      const fixedPageWidth = maxPageWidth;
+      
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = 297; // A4 width in mm (landscape)
+      const pdfHeight = 210; // A4 height in mm (landscape)
+
+      for (let i = 0; i < menuPages.length; i++) {
+        const page = menuPages[i] as HTMLElement;
+        
+        // Check if page has content
+        if (!page || page.offsetHeight === 0) {
+          console.warn(`Page ${i} has no content, skipping...`);
+          continue;
+        }
+        
+        // Save original styles
+        const originalStyles = {
+          position: page.style.position,
+          zIndex: page.style.zIndex,
+          display: page.style.display,
+          visibility: page.style.visibility,
+          opacity: page.style.opacity,
+          height: page.style.height,
+          maxHeight: page.style.maxHeight,
+          overflow: page.style.overflow,
+          overflowY: page.style.overflowY,
+        };
+        
+        // Hide all other pages temporarily to isolate this one
+        menuPages.forEach((otherPage: Element, idx: number) => {
+          if (idx !== i) {
+            const other = otherPage as HTMLElement;
+            other.style.display = 'none';
+            other.style.visibility = 'hidden';
+            other.style.opacity = '0';
+          }
+        });
+        
+        // Make current page visible and ensure it's rendered
+        // CRITICAL: Set these styles explicitly to ensure visibility
+        page.style.position = 'relative';
+        page.style.zIndex = '9999';
+        page.style.display = 'block';
+        page.style.visibility = 'visible';
+        page.style.opacity = '1';
+        page.style.width = `${fixedPageWidth}px`;
+        page.style.maxWidth = `${fixedPageWidth}px`;
+        page.style.minWidth = `${fixedPageWidth}px`;
+        page.style.overflow = 'visible';
+        page.style.overflowY = 'visible';
+        page.style.height = 'auto';
+        page.style.minHeight = 'auto';
+        page.style.maxHeight = 'none';
+        page.style.padding = '';
+        page.style.margin = '';
+        
+        // Force the page to be in the document flow
+        page.removeAttribute('hidden');
+        page.setAttribute('aria-hidden', 'false');
+        
+        // Ensure all child containers don't restrict height
+        const foldableContainers = page.querySelectorAll('.foldable-container');
+        foldableContainers.forEach((container: Element) => {
+          const cont = container as HTMLElement;
+          cont.style.height = 'auto';
+          cont.style.minHeight = 'auto';
+          cont.style.maxHeight = 'none';
+          cont.style.overflow = 'visible';
+          cont.style.overflowY = 'visible';
+        });
+        
+        const foldPanels = page.querySelectorAll('.fold-panel');
+        foldPanels.forEach((panel: Element) => {
+          const pan = panel as HTMLElement;
+          pan.style.height = 'auto';
+          pan.style.minHeight = 'auto';
+          pan.style.maxHeight = 'none';
+          pan.style.overflow = 'visible';
+          pan.style.overflowY = 'visible';
+        });
+        
+        // Ensure sections expand naturally
+        const sections = page.querySelectorAll('.section');
+        sections.forEach((section: Element) => {
+          const sec = section as HTMLElement;
+          sec.style.height = 'auto';
+          sec.style.minHeight = 'auto';
+          sec.style.maxHeight = 'none';
+          sec.style.overflow = 'visible';
+          sec.style.overflowY = 'visible';
+        });
+        
+        // Verify page has content before proceeding
+        // Check for both cover page and menu page elements
+        const isCoverPage = page.classList.contains('cover-page');
+        const hasMenuContent = page.querySelector('.section-title, .category-title, .menu-item, .foldable-container');
+        const hasCoverContent = page.querySelector('.cover-content, .cover-title, .cover-logo');
+        const hasContent = hasMenuContent || hasCoverContent;
+        
+        if (!hasContent) {
+          console.error(`Page ${i} has no content elements! Class: ${page.className}, HTML: ${page.innerHTML.substring(0, 200)}`);
+          Object.assign(page.style, originalStyles);
+          // Restore other pages
+          menuPages.forEach((otherPage: Element, idx: number) => {
+            if (idx !== i) {
+              const other = otherPage as HTMLElement;
+              other.style.display = '';
+              other.style.visibility = '';
+              other.style.opacity = '';
+            }
+          });
+          continue;
+        }
+        
+        if (isCoverPage) {
+          console.log(`Page ${i} is cover page - Found cover content elements`);
+        } else {
+          console.log(`Page ${i} content check: Found ${page.querySelectorAll('.menu-item').length} menu items, ${page.querySelectorAll('.category').length} categories`);
+        }
+        
+        // Ensure page is in viewport and visible
+        const container = menuContainerRef.current;
+        if (container) {
+          // Make container visible and position it
+          container.style.display = 'block';
+          container.style.visibility = 'visible';
+          container.style.opacity = '1';
+          container.style.position = 'relative';
+          container.style.overflow = 'visible';
+          container.style.height = 'auto';
+          container.style.maxHeight = 'none';
+          // Scroll container to show this page
+          container.scrollTop = page.offsetTop;
+        }
+        
+        // Position page at top of viewport for better capture
+        page.style.position = 'relative';
+        page.style.top = '0';
+        page.style.left = '0';
+        page.style.marginTop = '0';
+        page.style.marginBottom = '0';
+        
+        // Ensure page is visible in DOM and scroll to it
+        page.scrollIntoView({ behavior: 'instant', block: 'start' });
+        
+        // Scroll window to top to ensure page starts at viewport top
+        window.scrollTo(0, 0);
+        
+        // Wait for rendering and fonts - longer wait for content to load
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Force multiple reflows to ensure rendering
+        void page.offsetHeight;
+        void page.offsetWidth;
+        void page.getBoundingClientRect();
+        
+        // Check if text content exists and verify rendering
+        const textContent = page.textContent || page.innerText;
+        if (!textContent || textContent.trim().length === 0) {
+          console.warn(`Page ${i} has no text content! HTML:`, page.innerHTML.substring(0, 200));
+        } else {
+          console.log(`Page ${i} has text content: ${textContent.substring(0, 100)}...`);
+        }
+        
+        // Verify elements are actually rendered
+        const testElement = page.querySelector('.section-title, .category-title, .item-name');
+        if (testElement) {
+          const testRect = testElement.getBoundingClientRect();
+          if (testRect.width === 0 || testRect.height === 0) {
+            console.warn(`Page ${i} test element not rendered properly!`);
+          }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Get actual dimensions from the rendered page
+        const rect = page.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(page);
+        
+        // Check if page is actually visible
+        if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden' || computedStyle.opacity === '0') {
+          console.error(`Page ${i} is not visible!`);
+          Object.assign(page.style, originalStyles);
+          // Restore other pages
+          menuPages.forEach((otherPage: Element, idx: number) => {
+            if (idx !== i) {
+              const other = otherPage as HTMLElement;
+              other.style.display = '';
+              other.style.visibility = '';
+            }
+          });
+          continue;
+        }
+        
+        // Calculate width - ALWAYS use fixedPageWidth for consistency across all pages
+        const pageWidth = fixedPageWidth; // Always same width for all pages
+        
+        console.log(`Preparing to capture page ${i}: width=${pageWidth}, initial scrollHeight=${page.scrollHeight}, offsetHeight=${page.offsetHeight}`);
+        
+        // Wait for fonts to load before capture
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Ensure all text elements are visible and have proper styles
+        const textElements = page.querySelectorAll('h1, h2, h3, p, span, div, li');
+        textElements.forEach((el: Element) => {
+          const element = el as HTMLElement;
+          const style = window.getComputedStyle(element);
+          if (style.color === 'rgba(0, 0, 0, 0)' || style.color === 'transparent') {
+            element.style.color = '#000000';
+          }
+          if (style.fontSize === '0px') {
+            element.style.fontSize = 'inherit';
+          }
+        });
+        
+        // Let page expand naturally - don't restrict height
+        // This ensures all content is visible for capture
+        page.style.height = 'auto';
+        page.style.minHeight = 'auto';
+        page.style.maxHeight = 'none';
+        
+        // Also ensure foldable container expands naturally
+        let foldableContainer = page.querySelector('.foldable-container') as HTMLElement;
+        if (foldableContainer) {
+          foldableContainer.style.height = 'auto';
+          foldableContainer.style.minHeight = 'auto';
+          foldableContainer.style.maxHeight = 'none';
+        }
+        
+        // Wait for layout to settle and content to render
+        await new Promise(resolve => setTimeout(resolve, 500));
+        void page.offsetHeight; // Force reflow
+        void page.scrollHeight; // Force calculation
+        await new Promise(resolve => setTimeout(resolve, 300));
+        void page.offsetHeight; // Force reflow again
+        void page.scrollHeight; // Force calculation again
+        
+        // Get the actual rendered height after natural expansion
+        const actualRenderedHeight = Math.max(
+          page.scrollHeight,
+          page.offsetHeight,
+          page.getBoundingClientRect().height
+        );
+        
+        console.log(`Page ${i} natural height: scrollHeight=${page.scrollHeight}, offsetHeight=${page.offsetHeight}, rect.height=${page.getBoundingClientRect().height}`);
+        
+        // Final wait to ensure all content is fully rendered before capture
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Re-check height after final wait
+        const finalHeight = Math.max(
+          page.scrollHeight,
+          page.offsetHeight,
+          page.getBoundingClientRect().height
+        );
+        console.log(`Page ${i} final height before capture: ${finalHeight}px`);
+        
+        // Final verification: Ensure page is visible and has dimensions
+        const finalRect = page.getBoundingClientRect();
+        const finalComputedStyle = window.getComputedStyle(page);
+        
+        console.log(`Page ${i} before capture:`, {
+          display: finalComputedStyle.display,
+          visibility: finalComputedStyle.visibility,
+          opacity: finalComputedStyle.opacity,
+          width: finalRect.width,
+          height: finalRect.height,
+          scrollHeight: page.scrollHeight,
+          offsetHeight: page.offsetHeight,
+          hasContent: page.querySelectorAll('.menu-item').length > 0
+        });
+        
+        if (finalComputedStyle.display === 'none' || finalComputedStyle.visibility === 'hidden' || finalRect.width === 0) {
+          console.error(`Page ${i} is not properly visible! Skipping capture.`);
+          Object.assign(page.style, originalStyles);
+          // Restore other pages
+          menuPages.forEach((otherPage: Element, idx: number) => {
+            if (idx !== i) {
+              const other = otherPage as HTMLElement;
+              other.style.display = '';
+              other.style.visibility = '';
+              other.style.opacity = '';
+            }
+          });
+          continue;
+        }
+        
+        // Calculate full content height by checking ALL child elements
+        // Reuse foldableContainer variable
+        if (!foldableContainer) {
+          foldableContainer = page.querySelector('.foldable-container') as HTMLElement;
+        }
+        
+        // Get height of all major content elements
+        let maxBottom = 0;
+        const allContentElements = page.querySelectorAll('.section-title, .category-title, .menu-item, .fold-panel, .section, .category');
+        
+        allContentElements.forEach((element: Element) => {
+          const el = element as HTMLElement;
+          const rect = el.getBoundingClientRect();
+          const pageRect = page.getBoundingClientRect();
+          
+          // Calculate position relative to page top (without scrollY, as we want relative to page)
+          const relativeTop = rect.top - pageRect.top;
+          const elementHeight = Math.max(
+            el.scrollHeight,
+            el.offsetHeight,
+            rect.height
+          );
+          const elementBottom = relativeTop + elementHeight;
+          maxBottom = Math.max(maxBottom, elementBottom);
+        });
+        
+        // Also check container heights
+        const containerHeight = foldableContainer ? Math.max(
+          foldableContainer.scrollHeight,
+          foldableContainer.offsetHeight,
+          foldableContainer.getBoundingClientRect().height
+        ) : 0;
+        
+        // Calculate from last element if available
+        const lastElement = page.lastElementChild as HTMLElement;
+        let lastElementBottom = 0;
+        if (lastElement) {
+          const lastRect = lastElement.getBoundingClientRect();
+          const pageRect = page.getBoundingClientRect();
+          const relativeTop = lastRect.top - pageRect.top;
+          lastElementBottom = relativeTop + Math.max(
+            lastElement.scrollHeight,
+            lastElement.offsetHeight,
+            lastRect.height
+          );
+        }
+        
+        // Use the maximum of all calculations, add generous padding to prevent cutting
+        const baseHeight = Math.max(
+          page.scrollHeight,
+          page.offsetHeight,
+          finalHeight,
+          containerHeight,
+          maxBottom,
+          lastElementBottom
+        );
+        
+        // Add minimal padding: only 10px top to prevent cutting, NO bottom padding
+        const topPadding = 10;
+        const bottomPadding = 0; // No bottom padding
+        const fullContentHeight = baseHeight + topPadding;
+        
+        // Ensure page element has full height set so html2canvas captures everything
+        page.style.height = `${fullContentHeight}px`;
+        page.style.minHeight = `${fullContentHeight}px`;
+        page.style.paddingTop = `${topPadding}px`; // Minimal top padding
+        page.style.paddingBottom = '0'; // No bottom padding
+        page.style.boxSizing = 'content-box'; // Padding adds to height
+        
+        // Also ensure container has full height
+        if (foldableContainer) {
+          foldableContainer.style.height = 'auto';
+          foldableContainer.style.minHeight = `${containerHeight}px`;
+          foldableContainer.style.paddingBottom = '0'; // No bottom padding
+        }
+        
+        // Wait for height to be applied
+        await new Promise(resolve => setTimeout(resolve, 300));
+        void page.offsetHeight; // Force reflow
+        void page.scrollHeight; // Force calculation
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Recalculate after padding
+        const finalScrollHeight = Math.max(
+          page.scrollHeight,
+          page.offsetHeight,
+          fullContentHeight
+        );
+        
+        console.log(`Page ${i} capture dimensions: width=${pageWidth}, fullContentHeight=${fullContentHeight}, finalScrollHeight=${finalScrollHeight}, maxBottom=${maxBottom}, containerHeight=${containerHeight}`);
+        
+        // Capture with optimized settings for text rendering
+        // Use the final scroll height to ensure full content capture
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: true, // Enable logging to debug
+          backgroundColor: '#ffffff',
+          width: pageWidth,
+          height: finalScrollHeight, // Use calculated height with padding
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: pageWidth,
+          windowHeight: Math.max(window.innerHeight, finalScrollHeight + 300), // Extra large buffer
+          removeContainer: false,
+          imageTimeout: 30000,
+          ignoreElements: (element) => {
+            // Don't ignore any elements - capture everything
+            return false;
+          },
+          onclone: (clonedDoc, element) => {
+            try {
+              // Ensure all text is visible in cloned document
+              const clonedPage = element as HTMLElement;
+              if (clonedPage) {
+                // Set full height with minimal padding on cloned page
+                clonedPage.style.height = `${finalScrollHeight}px`;
+                clonedPage.style.minHeight = `${finalScrollHeight}px`;
+                clonedPage.style.maxHeight = 'none';
+                clonedPage.style.overflow = 'visible';
+                clonedPage.style.overflowY = 'visible';
+                clonedPage.style.paddingTop = '10px'; // Minimal padding at top
+                clonedPage.style.paddingBottom = '0'; // No bottom padding
+                clonedPage.style.boxSizing = 'content-box'; // Padding adds to height
+                
+                // Ensure foldable container expands naturally
+                const clonedContainer = clonedPage.querySelector('.foldable-container') as HTMLElement;
+                if (clonedContainer) {
+                  clonedContainer.style.height = 'auto';
+                  clonedContainer.style.minHeight = `${containerHeight}px`;
+                  clonedContainer.style.maxHeight = 'none';
+                  clonedContainer.style.overflow = 'visible';
+                  clonedContainer.style.overflowY = 'visible';
+                  clonedContainer.style.paddingBottom = '0'; // No bottom padding
+                }
+                
+                // Ensure all panels expand naturally
+                const clonedPanels = clonedPage.querySelectorAll('.fold-panel');
+                clonedPanels.forEach((panel: Element) => {
+                  const pan = panel as HTMLElement;
+                  pan.style.height = 'auto';
+                  pan.style.minHeight = 'auto';
+                  pan.style.maxHeight = 'none';
+                  pan.style.overflow = 'visible';
+                  pan.style.overflowY = 'visible';
+                });
+                
+                // Ensure all sections expand naturally
+                const clonedSections = clonedPage.querySelectorAll('.section');
+                clonedSections.forEach((section: Element) => {
+                  const sec = section as HTMLElement;
+                  sec.style.height = 'auto';
+                  sec.style.minHeight = 'auto';
+                  sec.style.maxHeight = 'none';
+                  sec.style.overflow = 'visible';
+                  sec.style.overflowY = 'visible';
+                });
+                
+                // Get all text-containing elements
+                const textSelectors = 'h1, h2, h3, h4, h5, h6, p, span, div, li, td, th, label, .item-name, .item-price, .item-description, .section-title, .category-title';
+                const textElements = clonedPage.querySelectorAll(textSelectors);
+                
+                textElements.forEach((el: Element) => {
+                  const elem = el as HTMLElement;
+                  const style = window.getComputedStyle(elem);
+                  
+                  // Force visibility
+                  elem.style.visibility = 'visible';
+                  elem.style.opacity = '1';
+                  
+                  // Fix invisible text colors
+                  const color = style.color;
+                  if (!color || color === 'rgba(0, 0, 0, 0)' || color === 'transparent') {
+                    // Check parent for color
+                    let parent = elem.parentElement;
+                    let foundColor = false;
+                    while (parent && !foundColor) {
+                      const parentColor = window.getComputedStyle(parent).color;
+                      if (parentColor && parentColor !== 'rgba(0, 0, 0, 0)' && parentColor !== 'transparent') {
+                        elem.style.color = parentColor;
+                        foundColor = true;
+                      }
+                      parent = parent.parentElement;
+                    }
+                    if (!foundColor) {
+                      elem.style.color = '#000000'; // Default to black
+                    }
+                  }
+                  
+                  // Ensure font is visible
+                  if (style.fontSize === '0px' || parseFloat(style.fontSize) === 0) {
+                    elem.style.fontSize = '14px';
+                  }
+                });
+              }
+            } catch (e) {
+              console.warn('Error in onclone:', e);
+            }
+          }
+        });
+        
+        // Check if canvas has content
+        if (canvas.width === 0 || canvas.height === 0) {
+          console.error(`Canvas for page ${i} is empty! Dimensions: ${canvas.width}x${canvas.height}`);
+          Object.assign(page.style, originalStyles);
+          // Restore other pages
+          menuPages.forEach((otherPage: Element, idx: number) => {
+            if (idx !== i) {
+              const other = otherPage as HTMLElement;
+              other.style.display = '';
+              other.style.visibility = '';
+            }
+          });
+          continue;
+        }
+        
+        // Verify canvas captured content
+        // Since we're not restricting height, html2canvas should capture full content
+        const expectedCanvasHeight = actualRenderedHeight * 2; // scale is 2
+        const heightDifference = Math.abs(canvas.height - expectedCanvasHeight);
+        
+        console.log(`Canvas captured: ${canvas.width}x${canvas.height} (page scrollHeight: ${page.scrollHeight}, actualRenderedHeight: ${actualRenderedHeight}px, expected: ~${expectedCanvasHeight}px)`);
+        
+        if (heightDifference > 200) {
+          console.warn(`Canvas height differs significantly: Expected ~${expectedCanvasHeight}px, got ${canvas.height}px. This might indicate content was cut.`);
+        }
+        
+        // Verify canvas has actual content (not just white)
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          // Check multiple sample areas for content - especially bottom to detect cuts
+          const sampleSize = Math.min(200, Math.floor(canvas.width / 4), Math.floor(canvas.height / 4));
+          const samples = [
+            { x: 0, y: 0 }, // Top-left
+            { x: canvas.width - sampleSize, y: 0 }, // Top-right
+            { x: 0, y: Math.max(0, canvas.height - sampleSize - 50) }, // Bottom-left (with margin)
+            { x: canvas.width - sampleSize, y: Math.max(0, canvas.height - sampleSize - 50) }, // Bottom-right (with margin)
+            { x: Math.floor(canvas.width / 2) - sampleSize / 2, y: Math.floor(canvas.height / 2) - sampleSize / 2 }, // Center
+            { x: Math.floor(canvas.width / 4), y: Math.max(0, canvas.height - 100) }, // Bottom center-left
+            { x: Math.floor(canvas.width * 3 / 4), y: Math.max(0, canvas.height - 100) } // Bottom center-right
+          ];
+          
+          let hasContent = false;
+          for (const sample of samples) {
+            try {
+              const imageData = ctx.getImageData(
+                Math.max(0, sample.x),
+                Math.max(0, sample.y),
+                sampleSize,
+                sampleSize
+              );
+              const hasNonWhite = Array.from(imageData.data).some((val, idx) => {
+                if (idx % 4 === 3) return false; // Skip alpha channel
+                return val < 240; // Not pure white (more lenient threshold)
+              });
+              if (hasNonWhite) {
+                hasContent = true;
+                break;
+              }
+            } catch (e) {
+              // Sample area might be out of bounds, skip
+            }
+          }
+          
+          if (!hasContent) {
+            console.error(`Canvas for page ${i} appears to be blank/white! Canvas size: ${canvas.width}x${canvas.height}`);
+            // Don't skip - try to capture anyway, might be a white background page
+          }
+        }
+        
+        console.log(`Successfully captured page ${i}: ${canvas.width}x${canvas.height}`);
+        
+        // Restore original styles for current page
+        Object.assign(page.style, originalStyles);
+        
+        // Restore other pages visibility
+        menuPages.forEach((otherPage: Element, idx: number) => {
+          if (idx !== i) {
+            const other = otherPage as HTMLElement;
+            other.style.display = '';
+            other.style.visibility = '';
+          }
+        });
+
+        // Convert canvas to image data
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        
+        // Calculate dimensions - ALWAYS use exactly 70% of PDF width for ALL pages
+        const aspectRatio = canvas.width / canvas.height;
+        const targetWidth = pdfWidth * 0.6; // 70% of PDF width = 297mm * 0.7 = 207.9mm
+        const calculatedImgHeight = targetWidth / aspectRatio;
+        
+        // Add new page if not the first
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        // IMPORTANT: One section per page - scale down if needed to fit on one page
+        // CRITICAL: Keep width ALWAYS at 70% (targetWidth) for ALL pages
+        let finalImgHeight = calculatedImgHeight;
+        
+        if (calculatedImgHeight > pdfHeight) {
+          // Scale down proportionally to fit height, but keep width at 70%
+          const scaleFactor = pdfHeight / calculatedImgHeight;
+          finalImgHeight = pdfHeight;
+          
+          // Calculate what the scaled width would be
+          const scaledWidth = targetWidth * scaleFactor;
+          
+          // Scale width back to targetWidth (70%) to ensure consistency
+          const widthScaleBack = targetWidth / scaledWidth;
+          finalImgHeight = finalImgHeight * widthScaleBack;
+          
+          // Clamp height if it still exceeds
+          if (finalImgHeight > pdfHeight) {
+            finalImgHeight = pdfHeight;
+          }
+          
+          console.log(`Page ${i}: width=${targetWidth.toFixed(1)}mm (70% FIXED), height=${finalImgHeight.toFixed(1)}mm, scaleFactor=${scaleFactor.toFixed(2)}`);
+        } else {
+          console.log(`Page ${i}: width=${targetWidth.toFixed(1)}mm (70% FIXED), height=${finalImgHeight.toFixed(1)}mm`);
+        }
+        
+        // ALWAYS use targetWidth (70%) for width - NEVER change it
+        const xOffset = (pdfWidth - targetWidth) / 2; // Center horizontally
+        const yOffset = Math.max(0, (pdfHeight - finalImgHeight) / 2); // Center vertically
+        
+        // Add image to PDF - ALWAYS 70% width (targetWidth), center on page
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, targetWidth, finalImgHeight);
+      }
+
+      // Cleanup - remove temporary stylesheet if still exists
+      const tempStyle = document.getElementById('temp-capture-styles');
+      if (tempStyle) {
+        tempStyle.remove();
+      }
+
+      // Save the PDF
+      pdf.save(`${projectName}-Menu-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      setIsGeneratingPDF(false);
     } catch (error) {
-      console.error('Print error:', error);
-      alert('An error occurred while printing. Please try again.');
+      console.error('PDF generation error:', error);
+      
+      // Cleanup - remove temporary stylesheet
+      const tempStyle = document.getElementById('temp-capture-styles');
+      if (tempStyle) {
+        tempStyle.remove();
+      }
+      
+      setIsGeneratingPDF(false);
+      alert('Error generating PDF. Please try again.');
     }
   };
 
@@ -268,23 +964,22 @@ export default function PrintMenuPage() {
                 <button
                   onClick={handlePrint}
                   type="button"
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-3 rounded-xl font-bold text-base hover:from-green-600 hover:to-emerald-700 transition-all shadow-xl transform hover:scale-105 cursor-pointer w-full"
+                  disabled={isGeneratingPDF}
+                  className={`bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-3 rounded-xl font-bold text-base hover:from-green-600 hover:to-emerald-700 transition-all shadow-xl transform hover:scale-105 cursor-pointer w-full ${
+                    isGeneratingPDF ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  🖨️ Print / Save as PDF
+                  {isGeneratingPDF ? '⏳ Generating PDF...' : '📄 Download PDF'}
                 </button>
               </div>
               
               <div className="text-xs text-gray-300 space-y-1">
-                <p className="font-semibold">📋 Print Instructions:</p>
+                <p className="font-semibold">📋 Instructions:</p>
                 <ol className="list-decimal list-inside space-y-1 ml-2 text-xs">
                   <li>Select a template</li>
-                  <li>Click "Print / Save as PDF"</li>
-                  <li>In the print dialog, select "Save as PDF"</li>
-                  <li>Select landscape orientation</li>
-                  <li className="font-bold text-yellow-300">⚠️ IMPORTANT: Enable "Background graphics" checkbox</li>
+                  <li>Click "Download PDF" button</li>
+                  <li>PDF will download automatically</li>
                 </ol>
-                <p className="mt-2 text-green-300 text-xs">✅ Preview and Print will be the same!</p>
-                <p className="mt-1 text-red-300 text-xs">⚠️ Without background graphics, colors won't show in PDF!</p>
               </div>
             </div>
           </div>
@@ -292,7 +987,11 @@ export default function PrintMenuPage() {
           {/* Right Side - Preview/Page */}
           <div className="lg:col-span-2">
             {/* Menu Content - Same for preview and print */}
-            <div className={`print-container template-${selectedTemplate} border-4 border-[#9CAF88] rounded-xl shadow-2xl bg-white`} style={{ width: '100%', maxWidth: '100%', color: '#000' }}>
+            <div 
+              ref={menuContainerRef}
+              className={`print-container template-${selectedTemplate} border-4 border-[#9CAF88] rounded-xl shadow-2xl bg-white`} 
+              style={{ width: '100%', maxWidth: '100%', color: '#000' }}
+            >
               <MenuTemplate
                 menuData={menuData}
                 template={selectedTemplate}
@@ -303,6 +1002,28 @@ export default function PrintMenuPage() {
           </div>
         </div>
       </div>
+
+      {/* PDF Generation Loader Overlay */}
+      {isGeneratingPDF && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-md mx-4 text-center">
+            <div className="mb-6">
+              {/* Animated Spinner */}
+              <div className="relative w-20 h-20 mx-auto">
+                <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-green-500 rounded-full border-t-transparent animate-spin"></div>
+              </div>
+            </div>
+            
+            <h3 className="text-2xl font-bold text-gray-800 mb-3">Generating PDF...</h3>
+            <p className="text-gray-600 mb-4">Please wait</p>
+            
+            <div className="mt-4 text-sm text-gray-400">
+              This may take a few seconds
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Print Styles */}
       <style jsx global>{`
@@ -353,57 +1074,107 @@ export default function PrintMenuPage() {
           font-weight: 600 !important;
         }
         
-        /* Dark templates - ensure white text with good contrast */
-        .template-9,
-        .template-11,
-        .template-12,
-        .template-13 {
+        /* Dark templates - ensure dark background and white text with good contrast */
+        .template-9 .menu-page,
+        .template-9 .cover-page {
+          background: #1a1a1a !important;
+          background-color: #1a1a1a !important;
+        }
+        
+        .template-11 .menu-page,
+        .template-11 .cover-page {
           background: #8B1A1A !important;
           background-color: #8B1A1A !important;
         }
         
+        .template-12 .menu-page,
+        .template-12 .cover-page {
+          background: linear-gradient(135deg, #722F37 0%, #8B1A1A 100%) !important;
+          background-color: #722F37 !important;
+        }
+        
         @media print {
-          .template-9,
-          .template-11,
-          .template-12,
-          .template-13 {
-            background: #8B1A1A !important;
-            background-color: #8B1A1A !important;
+          .template-9 .menu-page,
+          .template-9 .cover-page,
+          .template-11 .menu-page,
+          .template-11 .cover-page,
+          .template-12 .menu-page,
+          .template-12 .cover-page {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
         }
         
+        .template-9 .fold-panel,
+        .template-11 .fold-panel,
+        .template-12 .fold-panel {
+          background: transparent !important;
+        }
+        
+        .template-9 .menu-item,
+        .template-11 .menu-item,
+        .template-12 .menu-item {
+          background: rgba(255, 255, 255, 0.05) !important;
+        }
+        
         .template-9 .item-name,
         .template-11 .item-name,
-        .template-12 .item-name,
-        .template-13 .item-name {
+        .template-12 .item-name {
           color: #FFFFFF !important;
           font-weight: 600 !important;
         }
         
         .template-9 .item-description,
         .template-11 .item-description,
-        .template-12 .item-description,
-        .template-13 .item-description {
+        .template-12 .item-description {
           color: #E8E8E8 !important;
           font-weight: normal !important;
         }
         
+        .template-9 .item-price,
+        .template-11 .item-price,
+        .template-12 .item-price {
+          color: #FFD700 !important;
+          font-weight: 700 !important;
+        }
+        
         .template-9 .section-title,
         .template-11 .section-title,
-        .template-12 .section-title,
-        .template-13 .section-title {
+        .template-12 .section-title {
           color: #D4AF37 !important;
           font-weight: bold !important;
         }
         
         .template-9 .category-title,
         .template-11 .category-title,
-        .template-12 .category-title,
-        .template-13 .category-title {
+        .template-12 .category-title {
           color: #F4D03F !important;
+          font-weight: 600 !important;
+        }
+        
+        /* Template 13 - Light background, dark text */
+        .template-13 .item-name {
+          color: #2C2C2C !important;
+          font-weight: 600 !important;
+        }
+        
+        .template-13 .item-price {
+          color: #8B1A1A !important;
+          font-weight: 700 !important;
+        }
+        
+        .template-13 .item-description {
+          color: #666666 !important;
+        }
+        
+        .template-13 .section-title {
+          color: #D4AF37 !important;
+          font-weight: bold !important;
+        }
+        
+        .template-13 .category-title {
+          color: #8B1A1A !important;
           font-weight: 600 !important;
         }
         .fold-panel {
@@ -429,12 +1200,320 @@ export default function PrintMenuPage() {
         }
         
         .menu-item {
-          margin-bottom: 8px;
+          margin-bottom: 4px;
+          padding: 3px 4px;
         }
         
         .menu-item:last-child {
           margin-bottom: 0;
         }
+        
+        /* Dynamic spacing based on item count - Professional menu card */
+        
+        /* Spacious - Few items (0-10 items) - Start from top with large spacing */
+        .spacing-spacious.menu-page {
+          padding: 15px !important;
+        }
+        .spacing-spacious .fold-panel {
+          padding: 12px 10px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+        }
+        .spacing-spacious .section {
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+        }
+        .spacing-spacious .category {
+          margin-bottom: 15px !important;
+        }
+        .spacing-spacious .category-title {
+          font-size: 15px !important;
+          margin-bottom: 10px !important;
+          margin-top: 15px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-spacious .menu-item {
+          margin-bottom: 15px !important;
+          padding: 8px 10px !important;
+        }
+        .spacing-spacious .item-name {
+          font-size: 14px !important;
+          line-height: 1.4 !important;
+          font-weight: 600 !important;
+        }
+        .spacing-spacious .item-description {
+          font-size: 11px !important;
+          line-height: 1.35 !important;
+          margin-top: 4px !important;
+        }
+        .spacing-spacious .item-price {
+          font-size: 13px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-spacious .section-title {
+          font-size: 22px !important;
+          margin-bottom: 20px !important;
+          padding: 12px 0 !important;
+        }
+        
+        /* Normal - Medium items (11-15 items) - Start from top with good spacing */
+        .spacing-normal.menu-page {
+          padding: 12px !important;
+        }
+        .spacing-normal .fold-panel {
+          padding: 8px 8px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+        }
+        .spacing-normal .section {
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+        }
+        .spacing-normal .category {
+          margin-bottom: 12px !important;
+        }
+        .spacing-normal .category-title {
+          font-size: 14px !important;
+          margin-bottom: 8px !important;
+          margin-top: 10px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-normal .menu-item {
+          margin-bottom: 10px !important;
+          padding: 5px 7px !important;
+        }
+        .spacing-normal .item-name {
+          font-size: 13px !important;
+          line-height: 1.35 !important;
+          font-weight: 600 !important;
+        }
+        .spacing-normal .item-description {
+          font-size: 10px !important;
+          line-height: 1.3 !important;
+          margin-top: 3px !important;
+        }
+        .spacing-normal .item-price {
+          font-size: 12px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-normal .section-title {
+          font-size: 20px !important;
+          margin-bottom: 15px !important;
+          padding: 10px 0 !important;
+        }
+        
+        /* Medium - More items (16-22 items) - Start from top with moderate spacing */
+        .spacing-medium.menu-page {
+          padding: 10px !important;
+        }
+        .spacing-medium .fold-panel {
+          padding: 6px 6px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+        }
+        .spacing-medium .section {
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+        }
+        .spacing-medium .category {
+          margin-bottom: 10px !important;
+        }
+        .spacing-medium .category-title {
+          font-size: 13px !important;
+          margin-bottom: 6px !important;
+          margin-top: 8px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-medium .menu-item {
+          margin-bottom: 8px !important;
+          padding: 4px 6px !important;
+        }
+        .spacing-medium .item-name {
+          font-size: 12px !important;
+          line-height: 1.3 !important;
+          font-weight: 600 !important;
+        }
+        .spacing-medium .item-description {
+          font-size: 9px !important;
+          line-height: 1.25 !important;
+          margin-top: 2px !important;
+        }
+        .spacing-medium .item-price {
+          font-size: 11px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-medium .section-title {
+          font-size: 18px !important;
+          margin-bottom: 12px !important;
+          padding: 8px 0 !important;
+        }
+        
+        /* Compact - Many items (23-30 items) - Tight spacing, minimal category gaps */
+        .spacing-compact.menu-page {
+          padding: 8px !important;
+        }
+        .spacing-compact .fold-panel {
+          padding: 5px 5px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+        }
+        .spacing-compact .section {
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        .spacing-compact .category {
+          margin-bottom: 2px !important;
+        }
+        .spacing-compact .category-title {
+          font-size: 12px !important;
+          margin-bottom: 3px !important;
+          margin-top: 3px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-compact .menu-item {
+          margin-bottom: 4px !important;
+          padding: 3px 4px !important;
+        }
+        .spacing-compact .item-name {
+          font-size: 11px !important;
+          line-height: 1.25 !important;
+          font-weight: 600 !important;
+        }
+        .spacing-compact .item-description {
+          font-size: 8px !important;
+          line-height: 1.2 !important;
+          margin-top: 1px !important;
+        }
+        .spacing-compact .item-price {
+          font-size: 10px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-compact .section-title {
+          font-size: 16px !important;
+          margin-bottom: 8px !important;
+          padding: 6px 0 !important;
+        }
+        
+        /* Very Compact - Too many items (31+ items) - Minimal category spacing */
+        .spacing-very-compact.menu-page {
+          padding: 6px !important;
+        }
+        .spacing-very-compact .fold-panel {
+          padding: 4px 4px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+        }
+        .spacing-very-compact .section {
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        .spacing-very-compact .category {
+          margin-bottom: 1px !important;
+        }
+        .spacing-very-compact .category-title {
+          font-size: 11px !important;
+          margin-bottom: 2px !important;
+          margin-top: 2px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-very-compact .menu-item {
+          margin-bottom: 3px !important;
+          padding: 2px 3px !important;
+        }
+        .spacing-very-compact .item-name {
+          font-size: 10px !important;
+          line-height: 1.2 !important;
+          font-weight: 600 !important;
+        }
+        .spacing-very-compact .item-description {
+          font-size: 8px !important;
+          line-height: 1.15 !important;
+          margin-top: 1px !important;
+        }
+        .spacing-very-compact .item-price {
+          font-size: 9px !important;
+          font-weight: 700 !important;
+        }
+        .spacing-very-compact .section-title {
+          font-size: 15px !important;
+          margin-bottom: 6px !important;
+          padding: 5px 0 !important;
+        }
+        
+        /* Stylish Watermark for all menu pages */
+        .menu-page {
+          position: relative !important;
+          overflow: hidden !important;
+        }
+        
+        /* Main watermark - Restaurant name */
+        .menu-page::before {
+          content: 'SAGAR CAFE' !important;
+          position: absolute !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) rotate(-45deg) !important;
+          font-size: 100px !important;
+          font-weight: 900 !important;
+          color: rgba(212, 175, 55, 0.04) !important;
+          z-index: 0 !important;
+          pointer-events: none !important;
+          white-space: nowrap !important;
+          letter-spacing: 15px !important;
+          font-family: 'Georgia', 'Times New Roman', serif !important;
+          text-transform: uppercase !important;
+        }
+        
+        /* Decorative corner ornaments */
+        .menu-page::after {
+          content: '' !important;
+          position: absolute !important;
+          top: 15px !important;
+          right: 15px !important;
+          width: 80px !important;
+          height: 80px !important;
+          border-top: 3px solid rgba(212, 175, 55, 0.15) !important;
+          border-right: 3px solid rgba(212, 175, 55, 0.15) !important;
+          border-top-right-radius: 8px !important;
+          z-index: 0 !important;
+          pointer-events: none !important;
+        }
+        
+        /* Bottom left corner decoration */
+        .foldable-container::before {
+          content: '' !important;
+          position: absolute !important;
+          bottom: 15px !important;
+          left: 15px !important;
+          width: 80px !important;
+          height: 80px !important;
+          border-bottom: 3px solid rgba(212, 175, 55, 0.15) !important;
+          border-left: 3px solid rgba(212, 175, 55, 0.15) !important;
+          border-bottom-left-radius: 8px !important;
+          z-index: 0 !important;
+          pointer-events: none !important;
+        }
+        
+        /* Ensure content is above watermark */
+        .menu-page > * {
+          position: relative !important;
+          z-index: 1 !important;
+        }
+        
+        .section-title,
+        .foldable-container {
+          position: relative !important;
+          z-index: 2 !important;
+        }
+        
         
         /* Screen-only card styling */
         @media screen {
@@ -455,11 +1534,6 @@ export default function PrintMenuPage() {
           }
         }
         
-        @media print {
-          .fold-panel {
-            padding: 2px 3px !important;
-          }
-        }
         .fold-line {
           background: repeating-linear-gradient(
             to bottom,
@@ -596,6 +1670,13 @@ export default function PrintMenuPage() {
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
           margin: 10px auto;
           max-width: 100%;
+          box-sizing: border-box;
+        }
+        
+        /* Ensure cover page has same width */
+        .cover-page {
+          width: 100% !important;
+          box-sizing: border-box !important;
         }
         .menu-page:last-child {
           page-break-after: auto;
@@ -605,6 +1686,12 @@ export default function PrintMenuPage() {
           @page {
             size: A4 landscape;
             margin: 0.5cm;
+          }
+            
+            /* Prevent blank pages */
+            @page :blank {
+              @top-center { content: none; }
+              @bottom-center { content: none; }
           }
           
           /* Remove all unnecessary spacing */
@@ -700,14 +1787,13 @@ export default function PrintMenuPage() {
             color-adjust: exact !important;
           }
           
-          /* Menu pages settings - Card Style */
+          /* Menu pages settings - Card Style - Match screen exactly */
           .menu-page {
-            page-break-after: always !important;
             page-break-before: auto !important;
             page-break-inside: avoid !important;
+            break-inside: avoid !important;
             width: 100% !important;
-            min-height: 100vh !important;
-            padding: 25px !important;
+            padding: 20px !important;
             margin: 0 !important;
             display: block !important;
             visibility: visible !important;
@@ -715,11 +1801,16 @@ export default function PrintMenuPage() {
             background: #FFFFFF !important;
             background-color: #FFFFFF !important;
             border: 2px solid #E0E0E0 !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
+          }
+          
+          /* Only add page break if not last page and has content */
+          .menu-page:not(:last-child) {
+            page-break-after: always !important;
           }
           
           .menu-page:first-of-type {
@@ -730,13 +1821,55 @@ export default function PrintMenuPage() {
             page-break-after: auto !important;
           }
           
-          /* Foldable container - 2 columns */
+          /* Hide completely empty menu pages */
+          .menu-page:empty {
+            display: none !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+          }
+          
+          /* Hide pages with empty containers */
+          .menu-page:has(.foldable-container:empty) {
+            display: none !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+          }
+          
+          /* Prevent blank pages from orphaned breaks */
+          .menu-page + .menu-page:empty {
+            display: none !important;
+          }
+          
+          /* Ensure content exists before breaking */
+          .menu-page:not(:has(.foldable-container .section *)) {
+            display: none !important;
+          }
+          
+          /* Section title styling in print - Match screen */
+          .menu-page > .section-title {
+            margin-top: 0 !important;
+            margin-bottom: 15px !important;
+            padding-bottom: 8px !important;
+            font-size: 18px !important;
+            line-height: 1.3 !important;
+            font-weight: bold !important;
+            text-align: center !important;
+            width: 100% !important;
+            display: block !important;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          
+          /* Foldable container - 2 columns - Match screen */
           .foldable-container {
-            grid-template-columns: 1fr 0.5px 1fr !important;
+            grid-template-columns: 1fr 1px 1fr !important;
             width: 100% !important;
             max-width: 100% !important;
-            min-height: auto !important;
             page-break-inside: avoid !important;
+            break-inside: avoid !important;
             display: grid !important;
             gap: 0 !important;
             row-gap: 0 !important;
@@ -745,30 +1878,32 @@ export default function PrintMenuPage() {
           
           .fold-panel {
             page-break-inside: avoid !important;
-            overflow: visible !important;
+            break-inside: avoid !important;
             width: 100% !important;
-            height: 100% !important;
             padding: 12px 10px !important;
             background: #FAFAFA !important;
             background-color: #FAFAFA !important;
             border: 1px solid #E8E8E8 !important;
-            border-radius: 0 !important;
+            border-radius: 4px !important;
             display: flex !important;
             flex-direction: column !important;
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
           
-          /* Equal spacing for all elements */
-          .section-title {
-            margin-top: 15px !important;
-            margin-bottom: 10px !important;
+          /* Equal spacing for all elements - Match screen */
+          .menu-page > .section-title {
+            margin-top: 0 !important;
+            margin-bottom: 15px !important;
             padding-bottom: 8px !important;
             font-size: 18px !important;
             line-height: 1.3 !important;
             font-weight: bold !important;
-            border-bottom: 2px solid #D4AF37 !important;
+            text-align: center !important;
+            width: 100% !important;
+            display: block !important;
             color: inherit !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -777,6 +1912,21 @@ export default function PrintMenuPage() {
           
           .section-title:first-child {
             margin-top: 0 !important;
+          }
+          
+          /* Section title inside fold-panel (legacy support) */
+          .fold-panel .section-title {
+            margin-top: 0 !important;
+            margin-bottom: 6px !important;
+            padding-bottom: 4px !important;
+            font-size: 16px !important;
+            line-height: 1.2 !important;
+            font-weight: bold !important;
+            border-bottom: 2px solid #D4AF37 !important;
+            color: inherit !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
           }
           
           .category-title {
@@ -855,7 +2005,7 @@ export default function PrintMenuPage() {
           .price-line {
             white-space: nowrap !important;
             display: block !important;
-            line-height: 1.3 !important;
+            line-height: 1.2 !important;
             word-break: keep-all !important;
             overflow-wrap: normal !important;
             unicode-bidi: embed !important;
@@ -898,6 +2048,8 @@ export default function PrintMenuPage() {
             margin-top: 0 !important;
             margin-bottom: 0 !important;
             padding: 0 !important;
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
           }
           
           .category {
@@ -916,7 +2068,7 @@ export default function PrintMenuPage() {
             padding: 15px !important;
           }
           
-          /* Equal spacing - all items same margin */
+          /* Equal spacing - all items same margin - Match screen */
           .menu-item {
             margin-bottom: 8px !important;
             padding: 10px 12px !important;
@@ -965,20 +2117,34 @@ export default function PrintMenuPage() {
             color-adjust: exact !important;
           }
           
-          /* Section and category breaks */
+          /* Section and category breaks - prevent breaking to fit on one page */
           .section {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+            orphans: 3 !important;
+            widows: 3 !important;
+            display: flex !important;
+            flex-direction: column !important;
           }
           
           .category {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+            orphans: 2 !important;
+            widows: 2 !important;
           }
           
           .menu-item {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+          }
+          
+          /* Ensure foldable container fits on one page */
+          .foldable-container {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            orphans: 3 !important;
+            widows: 3 !important;
           }
           
           /* Ensure all templates print correctly */
@@ -1632,7 +2798,7 @@ export default function PrintMenuPage() {
         .template-9 .item-price {
           font-weight: bold;
           font-size: 20px;
-          color: #9CAF88;
+          /* Color set by global rule - #FFD700 */
         }
 
         /* Template 10: Premium Classic */
@@ -1712,13 +2878,12 @@ export default function PrintMenuPage() {
         }
         .template-11 {
           background: #8B1A1A !important;
-          color: white !important;
         }
         @media print {
-          .template-11,
-          .template-11 * {
+          .template-11 {
             background: #8B1A1A !important;
-            color: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         }
         .template-11 .menu-header {
@@ -1804,8 +2969,8 @@ export default function PrintMenuPage() {
         }
         .template-11 .item-price {
           font-weight: bold;
-          color: #F4D03F;
           font-size: 18px;
+          /* Color set by global rule - #FFD700 */
         }
         .template-11 .item-description {
           color: rgba(255, 255, 255, 0.8) !important;
@@ -1818,13 +2983,12 @@ export default function PrintMenuPage() {
         }
         .template-12 {
           background: linear-gradient(135deg, #722F37 0%, #8B1A1A 100%) !important;
-          color: white !important;
         }
         @media print {
-          .template-12,
-          .template-12 * {
+          .template-12 {
             background: #722F37 !important;
-            color: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         }
         .template-12 .menu-header {
@@ -1917,9 +3081,9 @@ export default function PrintMenuPage() {
         }
         .template-12 .item-price {
           font-weight: bold;
-          color: #D4AF37;
           font-size: 19px;
           text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+          /* Color set by global rule - #FFD700 */
         }
         .template-12 .item-description {
           color: rgba(255, 255, 255, 0.85) !important;
@@ -2014,8 +3178,8 @@ export default function PrintMenuPage() {
         }
         .template-13 .item-price {
           font-weight: bold;
-          color: #8B1A1A;
           font-size: 15px;
+          /* Color set by global rule - #8B1A1A */
         }
         .template-13 .item-description {
           font-size: 11px;
@@ -2232,7 +3396,17 @@ function MenuTemplate({
   // Each section gets its own page
   {
     const sections = Object.keys(menuData);
-    const totalPages = sections.length;
+    
+    // Filter out empty sections first
+    const validSections = sections.filter(sectionName => {
+      const sectionData = menuData[sectionName];
+      const categories = Object.keys(sectionData).filter(cat => 
+        sectionData[cat] && Array.isArray(sectionData[cat]) && sectionData[cat].length > 0
+      );
+      return categories.length > 0;
+    });
+    
+    const totalPages = validSections.length + 1; // +1 for cover page
     
     return (
       <>
@@ -2240,27 +3414,96 @@ function MenuTemplate({
         <CoverPage />
         
         {/* Menu Pages - One page per section */}
-        {sections.map((sectionName, pageIndex) => {
+        {validSections.map((sectionName, pageIndex) => {
           // Get all categories for this section
           const sectionData = menuData[sectionName];
-          const categories = Object.keys(sectionData);
+          const categories = Object.keys(sectionData).filter(cat => 
+            sectionData[cat] && Array.isArray(sectionData[cat]) && sectionData[cat].length > 0
+          );
           
-          // Distribute categories across 2 panels
-          const categoriesPerPanel = Math.ceil(categories.length / 2);
-          const panel1Categories = categories.slice(0, categoriesPerPanel);
-          const panel2Categories = categories.slice(categoriesPerPanel);
+          // Distribute categories across 2 panels based on content balance
+          // Calculate items count for each category to balance content
+          const categoryWeights = categories.map(cat => {
+            const items = sectionData[cat];
+            const itemCount = Array.isArray(items) ? items.length : 0;
+            return { category: cat, weight: itemCount + 1 }; // +1 for category title
+          });
+          
+          // Sort by weight (descending) to distribute larger categories first
+          categoryWeights.sort((a, b) => b.weight - a.weight);
+          
+          // Distribute categories to balance content between panels
+          let panel1Weight = 0;
+          let panel2Weight = 0;
+          const panel1Categories: string[] = [];
+          const panel2Categories: string[] = [];
+          
+          for (const { category, weight } of categoryWeights) {
+            // Add to the panel with less weight
+            if (panel1Weight <= panel2Weight) {
+              panel1Categories.push(category);
+              panel1Weight += weight;
+            } else {
+              panel2Categories.push(category);
+              panel2Weight += weight;
+            }
+          }
+          
+          // Filter to ensure only categories with items are included
+          const panel1ValidCategories = panel1Categories.filter(cat => 
+            sectionData[cat] && Array.isArray(sectionData[cat]) && sectionData[cat].length > 0
+          );
+          const panel2ValidCategories = panel2Categories.filter(cat => 
+            sectionData[cat] && Array.isArray(sectionData[cat]) && sectionData[cat].length > 0
+          );
+          
+          // Check if this section has any items - count total items
+          const totalItems = categories.reduce((count, cat) => {
+            return count + (sectionData[cat] && Array.isArray(sectionData[cat]) ? sectionData[cat].length : 0);
+          }, 0);
+          
+          // Only render if there are actual menu items
+          if (totalItems === 0) {
+            return null;
+          }
+          
+          // Calculate dynamic spacing based on item count
+          // More items = less spacing, fewer items = more spacing
+          let spacingLevel = 'normal';
+          
+          if (totalItems > 30) {
+            spacingLevel = 'very-compact'; // Very tight for 30+ items
+          } else if (totalItems > 22) {
+            spacingLevel = 'compact'; // Tight for 23-30 items
+          } else if (totalItems > 15) {
+            spacingLevel = 'medium'; // Medium for 16-22 items
+          } else if (totalItems > 10) {
+            spacingLevel = 'normal'; // Normal for 11-15 items
+          } else {
+            spacingLevel = 'spacious'; // Spacious for 0-10 items
+          }
+          
+          console.log(`Section "${sectionName}": ${totalItems} items, spacing level: ${spacingLevel}`);
           
           return (
-            <div key={pageIndex} className={`menu-page template-${template}`} style={{ pageBreakBefore: pageIndex === 0 ? 'auto' : 'always' }}>
+            <div 
+              key={pageIndex} 
+              className={`menu-page template-${template} spacing-${spacingLevel}`} 
+              style={{ 
+                pageBreakBefore: pageIndex === 0 ? 'auto' : 'always'
+              }}
+            >
+              {/* Section Title - Full Width */}
+              <h2 className="section-title" style={{ color: colors.sectionTitle, borderBottomColor: colors.sectionBorder, borderBottom: `3px solid ${colors.sectionBorder}` }}>{sectionName}</h2>
+              
               <div className="foldable-container">
                 {/* Left Panel */}
                 <div className="fold-panel">
                   <div className="section">
-                    <h2 className="section-title" style={{ color: colors.sectionTitle, borderBottomColor: colors.sectionBorder }}>{sectionName}</h2>
-                    {panel1Categories.map((category) => (
+                    {panel1ValidCategories.length > 0 && panel1ValidCategories.map((category) => (
                       <div key={category} className="category">
                         <h3 className="category-title" style={{ color: colors.categoryTitle }}>{category}</h3>
-                        {sectionData[category].map((item, index) => (
+                        {sectionData[category] && sectionData[category].map((item, index) => (
                           <div key={index} className="menu-item">
                             <div className="item-info">
                               <div className="item-name" style={{ color: colors.itemName }}>{item.itemName}</div>
@@ -2288,10 +3531,12 @@ function MenuTemplate({
                 {/* Right Panel */}
                 <div className="fold-panel">
                   <div className="section">
-                    {panel2Categories.map((category) => (
+                    {panel2ValidCategories.length > 0 ? (
+                      <>
+                        {panel2ValidCategories.map((category) => (
                       <div key={category} className="category">
                         <h3 className="category-title" style={{ color: colors.categoryTitle }}>{category}</h3>
-                        {sectionData[category].map((item, index) => (
+                            {sectionData[category] && sectionData[category].map((item, index) => (
                           <div key={index} className="menu-item">
                             <div className="item-info">
                               <div className="item-name" style={{ color: colors.itemName }}>{item.itemName}</div>
@@ -2310,11 +3555,8 @@ function MenuTemplate({
                         ))}
                       </div>
                     ))}
-                  </div>
-                  
-                  {/* Page Number */}
-                  <div className="text-center mt-8 text-sm opacity-60">
-                    Page {pageIndex + 1} of {totalPages}
+                      </>
+                    ) : null}
                   </div>
                 </div>
               </div>
