@@ -149,7 +149,7 @@ export const RestaurantMenuClient: React.FC = () => {
             alt={projectName}
             width={80}
             height={80}
-            className="md:w-20 md:h-20 w-10 h-10 rounded-full shadow-md"
+            className="md:w-20 md:h-20 w-10 h-10"
           />
           <h1 className="text-2xl md:text-5xl font-bold text-[#2C3E50] tracking-tight">
             {projectName}
