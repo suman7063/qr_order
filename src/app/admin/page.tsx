@@ -11,7 +11,7 @@ export default function AdminPage() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const { handleClick } = useClickTracking();
   const projectName = process.env.NEXT_PUBLIC_PROJECT_NAME || "Restaurant";
-  const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || "/SagarCafeLogo.jpeg";
+  const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || "/SagarCafeLogo.png";
 
   const handleRefresh = async () => {
     try {

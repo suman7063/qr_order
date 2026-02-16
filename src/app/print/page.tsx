@@ -218,7 +218,7 @@ export default function PrintMenuPage() {
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
   const projectName = process.env.NEXT_PUBLIC_PROJECT_NAME || 'Restaurant';
-  const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || '/SagarCafeLogo.jpeg';
+  const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || '/SagarCafeLogo.png';
 
   const handlePrint = async () => {
     try {

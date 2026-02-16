@@ -21,7 +21,7 @@ export const RestaurantMenuClient: React.FC = () => {
   const [isTaglineVisible, setIsTaglineVisible] = useState<boolean>(true);
   const { handleClick } = useClickTracking();
   const projectName = process.env.NEXT_PUBLIC_PROJECT_NAME || 'Restaurant';
-  const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || '/SagarCafeLogo.jpeg';
+  const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || '/SagarCafeLogo.png';
 
   // Scroll effect for tagline visibility
   useEffect(() => {
